@@ -20,6 +20,10 @@ export class SimulationService {
     return this.simulations().find(s => s.id === id);
   }
 
+  getByIdRemote(id: number) {
+    return this.http.get<Simulation>(`${API_URL}/simulations/${id}`);
+  }
+
   save(sim: Simulation) {
     const obs = sim.id
       ? this.http.put<Simulation>(`${API_URL}/simulations/${sim.id}`, sim)

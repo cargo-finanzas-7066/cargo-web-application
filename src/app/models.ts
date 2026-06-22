@@ -7,12 +7,12 @@ export interface Client {
   monthlyIncome?: number; occupation?: string; status: string;
 }
 export interface Vehicle {
-  id: number; brand: string; model: string; year: number;
+  id: number; code?: string; brand: string; model: string; year: number;
   category: string; price: number; currency: string;
   dealer: string; description?: string; image?: string; imageUrl?: string; status: string;
 }
 export interface FinancialEntity {
-  id: number; name: string; type: string; product: string;
+  id: number; code?: string; shortName?: string; name: string; type: string; product: string;
   tea: number; minTerm: number; maxTerm: number;
   minDownPayment: number; insuranceDisbursement: number;
   insuranceVehicle: number; monthlyFee: number; adminCost: number;
@@ -21,22 +21,26 @@ export interface FinancialEntity {
 export interface Simulation {
   id: number; code: string; clientId: number; vehicleId: number;
   entityId: number; currency: string; vehiclePrice: number;
-  downPayment: number; financedAmount: number; term: number;
-  tea: number; paymentDay: number; disbursementDate: string;
-  graceType: 'none' | 'total' | 'partial'; graceMonths: number;
+  downPayment: number; downPaymentPercent?: number; financedAmount: number; term: number;
+  tea: number; tem?: number; paymentDay: number; disbursementDate: string;
+  graceType: 'none' | 'total' | 'partial' | 'S' | 'T' | 'P'; graceMonths: number;
+  balloonEnabled?: boolean; balloonAmount?: number;
   insuranceDisbursement: number; insuranceVehicle: number;
   monthlyFee: number; adminCost: number; notaryCost: number;
-  otherCharges: number; status: string; createdAt: string;
+  otherCharges: number; monthlyPayment?: number; van?: number; tir?: number; tcea?: number;
+  status: string; createdAt: string;
 }
 export interface SimulationResult {
-  monthlyPayment: number; van: number; tir: number; tcea: number;
-  financedAmount: number; totalPayment: number;
+  monthlyPayment: number; balloonAmount: number; tea: number; tem: number;
+  van: number; tir: number; tcea: number;
+  financedAmount: number; totalInterest: number; totalInsurance: number;
+  totalCommissions: number; totalCreditCost: number; totalPayment: number;
   schedule: PaymentRow[];
 }
 export interface PaymentRow {
   period: number; date: string; initialBalance: number;
-  payment: number; interest: number; amortization: number;
-  insurance: number; commission: number; finalBalance: number;
+  payment: number; balloonPayment: number; interest: number; amortization: number;
+  insurance: number; commission: number; totalPayment: number; finalBalance: number;
 }
 export interface DashboardStats {
   totalSimulations: number; totalClients: number;

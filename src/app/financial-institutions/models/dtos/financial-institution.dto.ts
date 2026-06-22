@@ -1,0 +1,36 @@
+export interface FinancialInstitutionDto {
+  id: number;
+  code: string;
+  displayOrder: number;
+  name: string;
+  shortName: string;
+  type: string;
+  logoText: string;
+  currency: string;
+  creditType: string;
+  product: string;
+  teaPublishedLabel: string;
+  minimumInitialLabel: string;
+  maximumFinancingLabel: string;
+  termLabel: string;
+  graceLabel: string;
+  insuranceSummaryLabel: string;
+  chargesSummaryLabel: string;
+  tea: number;
+  minTerm?: number;
+  maxTerm?: number;
+  minDownPayment?: number;
+  maxFinancing?: number;
+  insuranceDisbursement: number;
+  insuranceVehicle: number;
+  monthlyFee: number;
+  adminCost: number;
+  ratesJson: string;
+  insurancesJson: string;
+  chargesJson: string;
+  sourceName: string;
+  sourceDate: string;
+  verificationStatus: string;
+  canUseInSimulation: boolean;
+  status: string;
+}
