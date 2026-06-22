@@ -126,8 +126,7 @@ export class RegisterComponent {
     this.loading = true;
     this.auth.register({ name: this.name, email: this.email, password: this.password }).subscribe({
       next: (response) => {
-        this.auth.setSession(response);
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/login'], { queryParams: { registered: response.user.email } });
       },
       error: (err) => {
         this.error = err?.error?.message ?? 'No se pudo crear la cuenta institucional.';
