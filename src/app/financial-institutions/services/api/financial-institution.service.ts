@@ -17,4 +17,8 @@ export class FinancialInstitutionService {
       this.institutions.set(institutions);
     });
   }
+
+  getById(id: number) {
+    return this.institutions().find((institution) => institution.id === id);
+  }
 }

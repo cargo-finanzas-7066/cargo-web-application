@@ -1,11 +1,14 @@
 import { DecimalPipe, SlicePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Client, FinancialEntity, Simulation, SimulationResult, Vehicle } from '../../models';
-import { ClientService } from '../../services/client.service';
-import { EntityService } from '../../services/entity.service';
+import { Simulation, SimulationResult } from '../../models';
+import { CustomerDto } from '../../customers/models/dtos/customer.dto';
+import { CustomerService } from '../../customers/services/api/customer.service';
+import { FinancialInstitutionDto } from '../../financial-institutions/models/dtos/financial-institution.dto';
+import { FinancialInstitutionService } from '../../financial-institutions/services/api/financial-institution.service';
 import { SimulationService } from '../../services/simulation.service';
-import { VehicleService } from '../../services/vehicle.service';
+import { VehicleDto } from '../../vehicles/models/dtos/vehicle.dto';
+import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catalog.service';
 
 @Component({
   selector: 'app-results',
@@ -178,17 +181,17 @@ import { VehicleService } from '../../services/vehicle.service';
 export class ResultsComponent {
   private route = inject(ActivatedRoute);
   private simSvc = inject(SimulationService);
-  private clientSvc = inject(ClientService);
-  private vehicleSvc = inject(VehicleService);
-  private entitySvc = inject(EntityService);
+  private clientSvc = inject(CustomerService);
+  private vehicleSvc = inject(VehicleCatalogService);
+  private entitySvc = inject(FinancialInstitutionService);
 
   simId = +(this.route.snapshot.params['id'] || 0);
   today = new Date().toLocaleDateString('es-PE');
   result = signal<SimulationResult | null>(null);
   simulation = signal<Simulation | undefined>(undefined);
-  client = signal<Client | undefined>(undefined);
-  vehicle = signal<Vehicle | undefined>(undefined);
-  entity = signal<FinancialEntity | undefined>(undefined);
+  client = signal<CustomerDto | undefined>(undefined);
+  vehicle = signal<VehicleDto | undefined>(undefined);
+  entity = signal<FinancialInstitutionDto | undefined>(undefined);
 
   constructor() {
     this.loadSimulation();
