@@ -3,8 +3,8 @@ import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Simulation } from '../../models';
-import { ClientService } from '../../services/client.service';
-import { EntityService } from '../../services/entity.service';
+import { CustomerService } from '../../customers/services/api/customer.service';
+import { FinancialInstitutionService } from '../../financial-institutions/services/api/financial-institution.service';
 import { SimulationService } from '../../services/simulation.service';
 
 @Component({
@@ -33,7 +33,7 @@ import { SimulationService } from '../../services/simulation.service';
           <span>Entidad financiera ⓘ</span>
           <select [(ngModel)]="entityFilter">
             <option value="">Todas</option>
-            @for (entity of entitySvc.entities(); track entity.id) {
+            @for (entity of entitySvc.institutions(); track entity.id) {
               <option [value]="entity.id">{{ entity.shortName || entity.name }}</option>
             }
           </select>
@@ -134,8 +134,8 @@ import { SimulationService } from '../../services/simulation.service';
 })
 export class SimulationsListComponent {
   simSvc = inject(SimulationService);
-  clientSvc = inject(ClientService);
-  entitySvc = inject(EntityService);
+  clientSvc = inject(CustomerService);
+  entitySvc = inject(FinancialInstitutionService);
   query = '';
   entityFilter = '';
   dateFilter = '';

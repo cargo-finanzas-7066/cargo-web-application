@@ -8,6 +8,10 @@ export class VehicleCatalogService {
   private http = inject(HttpClient);
   vehicles = signal<VehicleDto[]>([]);
 
+  constructor() {
+    this.refresh();
+  }
+
   refresh() {
     this.http.get<VehicleDto[]>(`${API_URL}/vehicles/catalog`).subscribe((vehicles) => {
       this.vehicles.set(vehicles);
@@ -16,5 +20,9 @@ export class VehicleCatalogService {
 
   getAll() {
     return this.http.get<VehicleDto[]>(`${API_URL}/vehicles/catalog`);
+  }
+
+  getById(id: number) {
+    return this.vehicles().find((vehicle) => vehicle.id === id);
   }
 }
