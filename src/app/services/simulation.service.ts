@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { tap } from 'rxjs';
 import { Simulation, SimulationResult } from '../models';
 import { API_URL } from './api.service';
 
@@ -25,18 +26,18 @@ export class SimulationService {
   }
 
   save(sim: Simulation) {
-    const obs = sim.id
+    return (sim.id
       ? this.http.put<Simulation>(`${API_URL}/simulations/${sim.id}`, sim)
-      : this.http.post<Simulation>(`${API_URL}/simulations`, sim);
-    obs.subscribe(() => this.refresh());
-    return obs;
+      : this.http.post<Simulation>(`${API_URL}/simulations`, sim)
+    ).pipe(tap(() => this.refresh()));
   }
 
   calculate(id: number) {
-    return this.http.post<SimulationResult>(`${API_URL}/simulations/${id}/calculate`, {});
+    return this.http.post<SimulationResult>(`${API_URL}/simulations/${id}/calculate`, {})
+      .pipe(tap(() => this.refresh()));
   }
 
   delete(id: number) {
-    this.http.delete(`${API_URL}/simulations/${id}`).subscribe(() => this.refresh());
+    return this.http.delete<void>(`${API_URL}/simulations/${id}`).pipe(tap(() => this.refresh()));
   }
 }

@@ -195,10 +195,12 @@ export class ResultsComponent {
 
   constructor() {
     this.loadSimulation();
-    this.simSvc.calculate(this.simId).subscribe((result) => {
-      this.result.set(result);
-      this.simSvc.refresh();
-    });
+    const navigationResult = history.state?.result as SimulationResult | undefined;
+    if (navigationResult) {
+      this.result.set(navigationResult);
+    } else {
+      this.simSvc.calculate(this.simId).subscribe((result) => this.result.set(result));
+    }
   }
 
   loadSimulation() {
