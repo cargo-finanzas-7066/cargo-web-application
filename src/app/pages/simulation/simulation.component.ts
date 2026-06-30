@@ -2,11 +2,14 @@ import { DecimalPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { Client, FinancialEntity, Simulation, Vehicle } from '../../models';
-import { ClientService } from '../../services/client.service';
-import { EntityService } from '../../services/entity.service';
+import { Simulation } from '../../models';
+import { CustomerDto } from '../../customers/models/dtos/customer.dto';
+import { CustomerService } from '../../customers/services/api/customer.service';
+import { FinancialInstitutionDto } from '../../financial-institutions/models/dtos/financial-institution.dto';
+import { FinancialInstitutionService } from '../../financial-institutions/services/api/financial-institution.service';
 import { SimulationService } from '../../services/simulation.service';
-import { VehicleService } from '../../services/vehicle.service';
+import { VehicleDto } from '../../vehicles/models/dtos/vehicle.dto';
+import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catalog.service';
 
 type GraceType = 'S' | 'P' | 'T';
 
@@ -112,8 +115,8 @@ type GraceType = 'S' | 'P' | 'T';
             @if (selectedVehicle(); as vehicle) {
               <div class="vehicle-picked">
                 <div class="image-placeholder">
-                  @if (vehicle.imageUrl || vehicle.image) {
-                    <img [src]="vehicle.imageUrl || vehicle.image" alt="" />
+                  @if (vehicle.imageUrl) {
+                    <img [src]="vehicle.imageUrl" alt="" />
                   } @else {
                     <svg viewBox="0 0 24 24"><path d="M3 17h18l-2-6H5l-2 6Z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
                   }
@@ -153,10 +156,10 @@ type GraceType = 'S' | 'P' | 'T';
                 <h4>Condiciones referenciales (lectura)</h4>
                 <dl>
                   <dt>TEA publicada:</dt><dd>Según rango de capital</dd>
-                  <dt>Inicial mínima:</dt><dd>{{ entity.minDownPayment | number:'1.2-2' }}%</dd>
-                  <dt>Financiamiento máx:</dt><dd>{{ 100 - entity.minDownPayment | number:'1.2-2' }}%</dd>
-                  <dt>Plazo permitido:</dt><dd>{{ entity.minTerm }} - {{ entity.maxTerm }} meses</dd>
-                  <dt>Gracia permitida:</dt><dd>Hasta {{ graceLimit(entity) }} meses</dd>
+                  <dt>Inicial mínima:</dt><dd>{{ displayInitial(entity) }}</dd>
+                  <dt>Financiamiento máx:</dt><dd>{{ displayFinancing(entity) }}</dd>
+                  <dt>Plazo permitido:</dt><dd>{{ displayTerm(entity) }}</dd>
+                  <dt>Gracia permitida:</dt><dd>{{ displayGrace(entity) }}</dd>
                   <dt>Seguros referenciales:</dt><dd>Incluidos</dd>
                 </dl>
               </aside>
@@ -381,23 +384,24 @@ type GraceType = 'S' | 'P' | 'T';
 })
 export class SimulationComponent {
   private router = inject(Router);
-  private clientSvc = inject(ClientService);
-  private vehicleSvc = inject(VehicleService);
-  private entitySvc = inject(EntityService);
+  private clientSvc = inject(CustomerService);
+  private vehicleSvc = inject(VehicleCatalogService);
+  private entitySvc = inject(FinancialInstitutionService);
   private simSvc = inject(SimulationService);
 
   step = signal(1);
   clientQuery = '';
   hasDownPayment = true;
   balloonError = signal('');
+  calculating = signal(false);
   graceType = signal<GraceType>('S');
-  selectedClient = signal<Client | undefined>(undefined);
-  selectedVehicle = signal<Vehicle | undefined>(undefined);
-  selectedEntity = signal<FinancialEntity | undefined>(undefined);
+  selectedClient = signal<CustomerDto | undefined>(undefined);
+  selectedVehicle = signal<VehicleDto | undefined>(undefined);
+  selectedEntity = signal<FinancialInstitutionDto | undefined>(undefined);
 
-  clients = this.clientSvc.clients;
+  clients = this.clientSvc.customers;
   vehicles = this.vehicleSvc.vehicles;
-  entities = this.entitySvc.entities;
+  entities = this.entitySvc.institutions;
 
   simulation: Simulation = {
     id: 0,
@@ -436,7 +440,7 @@ export class SimulationComponent {
     return rows.slice(0, 1);
   });
 
-  selectClient(client: Client) {
+  selectClient(client: CustomerDto) {
     this.selectedClient.set(client);
     this.simulation.clientId = client.id;
   }
@@ -516,14 +520,21 @@ export class SimulationComponent {
   }
 
   calculate() {
-    if (!this.validateBalloon()) return;
+    if (this.calculating() || !this.validateBalloon()) return;
+    this.calculating.set(true);
     this.syncDownPaymentPercent();
     this.simulation.financedAmount = this.financedAmount();
     this.simulation.monthlyFee = this.effectivePortes();
     this.simSvc.save(this.simulation).subscribe((saved) => {
-      this.simSvc.calculate(saved.id).subscribe(() => {
-        this.router.navigate(['/results', saved.id]);
+      this.simulation.id = saved.id;
+      this.simSvc.calculate(saved.id).subscribe({
+        next: (result) => {
+          this.router.navigate(['/results', saved.id], { state: { result } });
+        },
+        error: () => this.calculating.set(false),
       });
+    }, () => {
+      this.calculating.set(false);
     });
   }
 
@@ -554,8 +565,32 @@ export class SimulationComponent {
     return entity?.shortName || entity?.name || 'BCP';
   }
 
-  graceLimit(entity: FinancialEntity) {
-    return entity.code === 'BCP' || entity.shortName === 'BCP' ? 6 : 3;
+  displayInitial(entity: FinancialInstitutionDto) {
+    return entity.minDownPayment === null || entity.minDownPayment === undefined
+      ? entity.minimumInitialLabel
+      : `${this.formatPercent(entity.minDownPayment)}%`;
+  }
+
+  displayFinancing(entity: FinancialInstitutionDto) {
+    return entity.maxFinancing === null || entity.maxFinancing === undefined
+      ? entity.maximumFinancingLabel
+      : `${this.formatPercent(entity.maxFinancing)}%`;
+  }
+
+  displayTerm(entity: FinancialInstitutionDto) {
+    if (entity.minTerm && entity.maxTerm) return `${entity.minTerm} - ${entity.maxTerm} meses`;
+    if (entity.maxTerm) return `Hasta ${entity.maxTerm} meses`;
+    return entity.termLabel || 'No publicado';
+  }
+
+  displayGrace(entity: FinancialInstitutionDto) {
+    return entity.graceLabel && entity.graceLabel !== 'No publicado'
+      ? entity.graceLabel
+      : 'No publicado';
+  }
+
+  private formatPercent(value: number) {
+    return value.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   private isBcp() {

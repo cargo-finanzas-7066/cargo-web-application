@@ -16,6 +16,10 @@ export class CustomerService {
     this.http.get<CustomerDto[]>(`${API_URL}/clients`).subscribe((customers) => this.customers.set(customers));
   }
 
+  getById(id: number) {
+    return this.customers().find((customer) => customer.id === id);
+  }
+
   save(customer: CustomerDto) {
     const request = customer.id
       ? this.http.put<CustomerDto>(`${API_URL}/clients/${customer.id}`, customer)
