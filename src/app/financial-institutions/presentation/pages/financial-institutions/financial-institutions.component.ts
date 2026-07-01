@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { PageContainerComponent } from '../../../../shared/components/page-container/page-container.component';
 import { FinancialInstitutionDto } from '../../../models/dtos/financial-institution.dto';
 import { FinancialInstitutionService } from '../../../services/api/financial-institution.service';
 
@@ -9,14 +10,13 @@ type JsonItem = Record<string, any>;
 @Component({
   selector: 'app-financial-institutions',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, PageContainerComponent],
   template: `
+    <app-page-container>
     <section class="institutions-page">
-      <header class="page-heading">
-        <span>Entidades y costos <b>Modo lectura</b></span>
-        <h1>Entidades financieras y costos</h1>
-        <p>Consulta de condiciones base publicadas por entidades financieras para créditos vehiculares en el Perú.</p>
-      </header>
+      <div class="page-header">
+        <div><h1>Entidades financieras y costos <small class="mode-badge">Modo lectura</small></h1></div>
+      </div>
 
       <div class="notice">
         <span class="notice-icon">i</span>
@@ -43,6 +43,7 @@ type JsonItem = Record<string, any>;
       </section>
 
       <section class="matrix-card">
+        <div class="table-scroll">
         <table>
           <thead>
             <tr>
@@ -53,12 +54,11 @@ type JsonItem = Record<string, any>;
               <th>Plazo</th>
               <th>Gracia <small>ⓘ</small></th>
               <th>Seguros <small>ⓘ</small></th>
-              <th>Detalle</th>
             </tr>
           </thead>
           <tbody>
             @for (institution of pagedInstitutions(); track institution.id) {
-              <tr>
+              <tr (click)="openDetail(institution)" tabindex="0" (keyup.enter)="openDetail(institution)">
                 <td class="entity-cell">
                   <span class="bank-logo" [class]="logoClass(institution)">{{ clean(institution.logoText) }}</span>
                   <strong>{{ clean(institution.shortName) }}</strong>
@@ -69,15 +69,11 @@ type JsonItem = Record<string, any>;
                 <td>{{ clean(displayTerm(institution)) }}</td>
                 <td>{{ clean(displayGrace(institution)) }}</td>
                 <td>{{ clean(displayInsurance(institution)) }}</td>
-                <td class="detail-cell">
-                  <button type="button" title="Ver detalle" aria-label="Ver detalle" (click)="openDetail(institution)">
-                    <svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.6"/></svg>
-                  </button>
-                </td>
               </tr>
             }
           </tbody>
         </table>
+        </div>
         <footer class="table-footer">
           <span>Mostrando 1 a {{ pagedInstitutions().length }} de 24 entidades</span>
           <div class="pagination">
@@ -163,14 +159,10 @@ type JsonItem = Record<string, any>;
         </div>
       }
     </section>
+    </app-page-container>
   `,
   styles: [`
-    .institutions-page { max-width: 1060px; }
-    .page-heading { margin-bottom: 30px; }
-    .page-heading > span { display: inline-flex; align-items: center; gap: 10px; color: #111827; font-size: 13px; margin-bottom: 42px; }
-    .page-heading b { padding: 3px 7px; background: #e9efff; color: #0036ad; font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }
-    .page-heading h1 { color: #111827; font-size: 34px; line-height: 1.08; margin-bottom: 8px; }
-    .page-heading p { color: #6b7280; font-size: 15px; }
+    .mode-badge { display: inline-block; margin-left: 10px; padding: 3px 7px; border-radius: 3px; background: #e9efff; color: #0036ad; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; vertical-align: middle; }
     .notice { display: flex; gap: 18px; align-items: flex-start; padding: 18px 20px; border: 1px solid #cfe2ff; border-radius: 8px; background: #eef6ff; color: #003b9d; line-height: 1.55; margin-bottom: 26px; }
     .notice-icon { display: grid; place-items: center; width: 20px; height: 20px; border: 2px solid #0a50c8; border-radius: 50%; font-weight: 900; flex: 0 0 auto; }
     .filters { display: grid; grid-template-columns: 1fr 300px; gap: 28px; padding: 20px 24px; border: 1px solid #d7deea; border-radius: 8px; background: #fff; margin-bottom: 28px; }
@@ -180,10 +172,14 @@ type JsonItem = Record<string, any>;
     input, select { width: 100%; height: 42px; border: 1px solid #d7deea; border-radius: 4px; background: #f8fafc; color: #172033; padding: 0 14px; font-size: 15px; }
     input { padding-left: 44px; }
     .matrix-card { overflow: hidden; border: 1px solid #d7deea; border-radius: 8px; background: #fff; }
-    table { width: 100%; border-collapse: collapse; }
-    th { padding: 16px 18px; background: #101827; color: #d7deea; text-align: center; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; min-width: 860px; border-collapse: collapse; }
+    th { padding: 16px 18px; background: #101827; color: #d7deea; text-align: center; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; white-space: nowrap; }
     th:first-child, td:first-child { text-align: left; }
-    td { padding: 18px; border-top: 1px solid #edf1f6; color: #475569; text-align: center; font-size: 15px; }
+    td { padding: 18px; border-top: 1px solid #edf1f6; color: #475569; text-align: center; font-size: 15px; white-space: nowrap; }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover td { background: #f8fbff; }
+    tbody tr:focus-visible td { background: #eef4ff; }
     .entity-cell { display: grid; grid-template-columns: 26px 1fr; align-items: center; gap: 12px; }
     .bank-logo { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #eef5ff; color: #1e48b8; font-size: 9px; font-weight: 900; }
     .bank-logo.bbva { background: #1d4aa4; color: #fff; }
@@ -192,7 +188,6 @@ type JsonItem = Record<string, any>;
     .bank-logo.banbif { background: #f97316; color: #fff; }
     .entity-cell strong { color: #111827; font-size: 16px; line-height: 1.15; }
     .blue { color: #003b9d; font-size: 16px; line-height: 1.2; }
-    .detail-cell button { display: grid; place-items: center; width: 30px; height: 30px; margin: 0 auto; border: 0; background: transparent; color: #8aa0bf; }
     svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     .table-footer { display: flex; justify-content: space-between; align-items: center; padding: 18px 26px; border-top: 1px solid #edf1f6; color: #64748b; font-size: 14px; }
     .pagination { display: flex; align-items: center; gap: 14px; }
@@ -227,7 +222,7 @@ type JsonItem = Record<string, any>;
     .secondary-action, .primary-action { display: grid; place-items: center; height: 44px; border-radius: 4px; font-weight: 900; }
     .secondary-action { border: 1px solid #d7deea; background: #fff; color: #334155; }
     .primary-action { border: 0; background: #0036ad; color: #fff; }
-    @media (max-width: 900px) { .filters { grid-template-columns: 1fr; } .matrix-card { overflow-x: auto; } }
+    @media (max-width: 900px) { .filters { grid-template-columns: 1fr; } }
   `],
 })
 export class FinancialInstitutionsComponent {

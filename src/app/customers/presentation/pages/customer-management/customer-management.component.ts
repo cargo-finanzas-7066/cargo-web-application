@@ -1,13 +1,15 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { PageContainerComponent } from '../../../../shared/components/page-container/page-container.component';
 import { CustomerDto } from '../../../models/dtos/customer.dto';
 import { CustomerService } from '../../../services/api/customer.service';
 
 @Component({
   selector: 'app-customer-management',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, PageContainerComponent],
   template: `
+    <app-page-container>
     <section class="customers-page">
       <section class="search-card">
         <label>
@@ -131,6 +133,7 @@ import { CustomerService } from '../../../services/api/customer.service';
         </div>
       }
     </section>
+    </app-page-container>
   `,
   styles: [`
     .customers-page { position: relative; min-height: calc(100vh - 96px); }

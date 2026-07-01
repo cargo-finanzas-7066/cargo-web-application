@@ -3,6 +3,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CustomerDto } from '../../customers/models/dtos/customer.dto';
 import { CustomerService } from '../../customers/services/api/customer.service';
+import { PageContainerComponent } from '../../shared/components/page-container/page-container.component';
 import { SimulationDto } from '../../simulations/models/dtos/simulation.dto';
 import { SimulationService } from '../../simulations/services/api/simulation.service';
 import { VehicleDto } from '../../vehicles/models/dtos/vehicle.dto';
@@ -11,18 +12,16 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
 @Component({
   selector: 'app-results',
   standalone: true,
-  imports: [DecimalPipe, SlicePipe],
+  imports: [DecimalPipe, SlicePipe, PageContainerComponent],
   template: `
+    <app-page-container>
     @if (result(); as r) {
       <section class="results-page">
         <div class="crumb">Simulaciones › <strong>Resultado de Simulación {{ r.code || ('#' + simId) }}</strong></div>
-        <header class="results-head">
-          <div>
-            <h1>Resultados de simulación</h1>
-            <p>Simulación generada para {{ clientName() }} bajo el método francés vencido ordinario.</p>
-          </div>
+        <div class="page-header">
+          <div><h1>Resultados de simulación</h1></div>
           <span class="saved">✓ Simulación guardada automáticamente</span>
-        </header>
+        </div>
 
         <section class="metrics">
           <article class="metric featured"><small>Cuota mensual</small><strong><span class="cur">{{ r.currency }}</span>{{ r.monthlyPayment | number:'1.2-2' }}</strong></article>
@@ -126,14 +125,11 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
     } @else {
       <section class="results-page"><div class="loading">Calculando resultados...</div></section>
     }
+    </app-page-container>
   `,
   styles: [`
-    .results-page { max-width:1120px; margin:0 auto; }
     .crumb { margin:-18px 0 32px; color:#8aa0bf; font-size:13px; }
     .crumb strong { color:#111827; }
-    .results-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; }
-    h1 { margin:0; font-size:32px; letter-spacing:-.03em; color:#111827; font-weight:900; }
-    p { color:#6b7280; margin-top:8px; font-size:15px; }
     .saved { align-self:center; padding:5px 10px; border-radius:999px; background:#eaf8ef; color:#087a3d; font-size:11px; font-weight:900; text-transform:uppercase; }
     .metrics { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:14px; margin-bottom:34px; }
     .metric { min-height:86px; padding:18px; background:#fff; border:1px solid #d9e1ee; border-radius:7px; box-shadow:0 1px 2px rgba(15,23,42,.05); overflow:hidden; }
@@ -166,7 +162,7 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
     .conditions-card footer { padding:18px 28px; border-top:1px solid #edf1f6; color:#6b7280; font-size:11px; }
     .loading { padding:60px; text-align:center; background:#fff; border:1px solid #d9e1ee; border-radius:8px; color:#64748b; }
     @media (max-width: 960px) {
-      .results-head { flex-direction:column; gap:12px; }
+      .page-header { flex-direction:column; gap:12px; }
       .metrics { grid-template-columns:repeat(2, 1fr); }
       .conditions-grid { grid-template-columns:1fr; }
     }

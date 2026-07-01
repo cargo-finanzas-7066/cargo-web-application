@@ -5,24 +5,23 @@ import { RouterLink } from '@angular/router';
 import { CustomerService } from '../../customers/services/api/customer.service';
 import { FinancialInstitutionService } from '../../financial-institutions/services/api/financial-institution.service';
 import { FinancialProductService } from '../../financial-products/services/api/financial-product.service';
+import { PageContainerComponent } from '../../shared/components/page-container/page-container.component';
 import { SimulationService } from '../../simulations/services/api/simulation.service';
 
 @Component({
   selector: 'app-simulations-list',
   standalone: true,
-  imports: [FormsModule, RouterLink, DecimalPipe],
+  imports: [FormsModule, RouterLink, DecimalPipe, PageContainerComponent],
   template: `
+    <app-page-container>
     <section class="simulations-page">
-      <header class="sim-header">
-        <div>
-          <h1>Simulaciones guardadas</h1>
-          <p>Consulta simulaciones de crédito vehicular generadas bajo el método francés vencido ordinario.</p>
-        </div>
+      <div class="page-header">
+        <div><h1>Simulaciones guardadas</h1></div>
         <a routerLink="/simulation/new" class="primary-action">
           <span>+</span>
           Nueva simulación
         </a>
-      </header>
+      </div>
 
       <section class="filters-card">
         <label class="search-field">
@@ -45,6 +44,7 @@ import { SimulationService } from '../../simulations/services/api/simulation.ser
       </section>
 
       <section class="table-card">
+        <div class="table-scroll">
         <table>
           <thead>
             <tr>
@@ -82,17 +82,15 @@ import { SimulationService } from '../../simulations/services/api/simulation.ser
             }
           </tbody>
         </table>
+        </div>
         <footer>
           <span>Mostrando 1-{{ filtered().length }} de {{ simSvc.simulations().length }} simulaciones</span>
         </footer>
       </section>
     </section>
+    </app-page-container>
   `,
   styles: [`
-    .simulations-page { max-width: 1060px; }
-    .sim-header { display:flex; justify-content:space-between; align-items:flex-start; margin:-26px 0 52px; }
-    h1 { margin:0; color:#111827; font-size:25px; font-weight:900; letter-spacing:-.02em; }
-    p { margin-top:4px; color:#64748b; line-height:1.35; max-width:640px; }
     .primary-action { display:inline-flex; align-items:center; gap:8px; height:38px; padding:0 20px; border-radius:7px; background:#0036a3; color:#fff; font-weight:900; box-shadow:0 6px 14px rgba(0,54,163,.16); }
     .primary-action span { font-size:20px; line-height:1; }
     .filters-card { display:grid; grid-template-columns:1fr 270px 190px; gap:24px; align-items:end; padding:26px; margin-bottom:32px; background:#fff; border:1px solid #d9e1ee; border-radius:8px; }
@@ -101,9 +99,10 @@ import { SimulationService } from '../../simulations/services/api/simulation.ser
     .filter-btn { width:116px; height:42px; display:inline-flex; align-items:center; justify-content:center; gap:8px; border:0; border-radius:4px; background:#0036a3; color:#fff; font-weight:900; cursor:pointer; }
     .filter-btn svg, .actions svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
     .table-card { overflow:hidden; background:#fff; border:1px solid #d9e1ee; border-radius:8px; box-shadow:0 1px 2px rgba(15,23,42,.03); }
-    table { width:100%; border-collapse:collapse; }
-    th { padding:20px 18px; background:#f8fafc; color:#6b7280; font-size:11px; font-weight:900; letter-spacing:.08em; text-align:left; text-transform:uppercase; }
-    td { padding:19px 18px; border-top:1px solid #edf1f6; color:#475569; vertical-align:middle; }
+    .table-scroll { overflow-x:auto; }
+    table { width:100%; min-width:900px; border-collapse:collapse; }
+    th { padding:20px 18px; background:#f8fafc; color:#6b7280; font-size:11px; font-weight:900; letter-spacing:.08em; text-align:left; text-transform:uppercase; white-space:nowrap; }
+    td { padding:19px 18px; border-top:1px solid #edf1f6; color:#475569; vertical-align:middle; white-space:nowrap; }
     tr:hover td { background:#fff; }
     .code { color:#003b9d; font-weight:900; }
     .client { color:#111827; font-weight:900; line-height:1.15; }
@@ -113,7 +112,7 @@ import { SimulationService } from '../../simulations/services/api/simulation.ser
     .actions a, .actions button { color:#8aa0bf; display:inline-flex; border:0; background:transparent; cursor:pointer; padding:0; }
     footer { display:flex; justify-content:space-between; align-items:center; padding:18px 24px; border-top:1px solid #edf1f6; color:#64748b; font-size:12px; }
     @media (max-width: 900px) {
-      .sim-header, footer { flex-direction:column; gap:16px; align-items:flex-start; }
+      .page-header, footer { flex-direction:column; gap:16px; align-items:flex-start; }
       .filters-card { grid-template-columns:1fr; }
     }
   `],

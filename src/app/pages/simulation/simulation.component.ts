@@ -10,14 +10,16 @@ import { FinancialProductDto } from '../../financial-products/models/dtos/financ
 import { FinancialProductService } from '../../financial-products/services/api/financial-product.service';
 import { GraceType, SimulationRequestDto } from '../../simulations/models/dtos/simulation-request.dto';
 import { SimulationService } from '../../simulations/services/api/simulation.service';
+import { PageContainerComponent } from '../../shared/components/page-container/page-container.component';
 import { VehicleDto } from '../../vehicles/models/dtos/vehicle.dto';
 import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catalog.service';
 
 @Component({
   selector: 'app-simulation',
   standalone: true,
-  imports: [FormsModule, RouterLink, DecimalPipe],
+  imports: [FormsModule, RouterLink, DecimalPipe, PageContainerComponent],
   template: `
+    <app-page-container>
     <section class="simulation-page">
       <div class="crumb">Simulaciones › <strong>Nueva simulación</strong></div>
 
@@ -284,9 +286,9 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
         }
       }
     </section>
+    </app-page-container>
   `,
   styles: [`
-    .simulation-page { max-width:1060px; margin:0 auto; }
     .crumb { margin:-18px 0 28px; color:#8aa0bf; font-size:13px; }
     .crumb strong { color:#111827; }
     .step-head h1 { color:#00318f; font-size:32px; line-height:1; letter-spacing:-.03em; margin:0 0 10px; font-weight:900; }

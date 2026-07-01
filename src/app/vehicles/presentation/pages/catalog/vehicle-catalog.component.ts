@@ -2,19 +2,20 @@ import { CurrencyPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { PageContainerComponent } from '../../../../shared/components/page-container/page-container.component';
 import { VehicleCatalogService } from '../../../services/api/vehicle-catalog.service';
 import { VehicleDto } from '../../../models/dtos/vehicle.dto';
 
 @Component({
   selector: 'app-vehicle-catalog',
   standalone: true,
-  imports: [CurrencyPipe, FormsModule, RouterLink],
+  imports: [CurrencyPipe, FormsModule, RouterLink, PageContainerComponent],
   template: `
+    <app-page-container>
     <section class="catalog-page">
-      <header class="page-title">
-        <h1>Catálogo de vehículos</h1>
-        <p>Consulta vehículos precargados y selecciona una unidad como referencia para iniciar una simulación de crédito.</p>
-      </header>
+      <div class="page-header">
+        <div><h1>Catálogo de vehículos</h1></div>
+      </div>
 
       <div class="notice">
         <span>ⓘ</span>
@@ -67,12 +68,9 @@ import { VehicleDto } from '../../../models/dtos/vehicle.dto';
         }
       </div>
     </section>
+    </app-page-container>
   `,
   styles: [`
-    .catalog-page { max-width: 980px; }
-    .page-title { margin-bottom: 22px; }
-    .page-title h1 { color: #111827; font-size: 32px; line-height: 1.1; margin-bottom: 8px; }
-    .page-title p { color: #52627a; font-size: 16px; }
     .notice { display: flex; gap: 16px; align-items: flex-start; padding: 18px 20px; border: 1px solid #dfe5ff; border-radius: 7px; background: #eef1ff; color: #0036ad; margin-bottom: 24px; }
     .notice span { font-size: 20px; }
     .notice p { line-height: 1.55; }

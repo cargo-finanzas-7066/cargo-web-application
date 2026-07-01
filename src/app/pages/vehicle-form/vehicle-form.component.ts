@@ -1,14 +1,16 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
+import { PageContainerComponent } from '../../shared/components/page-container/page-container.component';
 import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catalog.service';
 import { VehicleDto } from '../../vehicles/models/dtos/vehicle.dto';
 
 @Component({
   selector: 'app-vehicle-form',
   standalone: true,
-  imports: [FormsModule, RouterModule],
+  imports: [FormsModule, RouterModule, PageContainerComponent],
   template: `
+    <app-page-container>
     <div class="page-header"><div><h1>{{ isNew ? 'Nuevo' : 'Editar' }} vehículo</h1></div></div>
     <div class="card" style="max-width:640px">
       <form (ngSubmit)="save()">
@@ -45,6 +47,7 @@ import { VehicleDto } from '../../vehicles/models/dtos/vehicle.dto';
         </div>
       </form>
     </div>
+    </app-page-container>
   `
 })
 export class VehicleFormComponent {
