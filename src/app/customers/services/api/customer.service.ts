@@ -1,7 +1,11 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { map } from 'rxjs';
 import { API_URL } from '../../../services/api.service';
+import { PageDto } from '../../../shared/models/dtos/page.dto';
 import { CustomerDto } from '../../models/dtos/customer.dto';
+
+const CUSTOMER_PAGE_SIZE = 100;
 
 @Injectable({ providedIn: 'root' })
 export class CustomerService {
@@ -13,7 +17,10 @@ export class CustomerService {
   }
 
   refresh() {
-    this.http.get<CustomerDto[]>(`${API_URL}/clients`).subscribe((customers) => this.customers.set(customers));
+    const params = new HttpParams().set('page', 0).set('size', CUSTOMER_PAGE_SIZE);
+    this.http.get<PageDto<CustomerDto>>(`${API_URL}/clients`, { params })
+      .pipe(map((page) => page.content))
+      .subscribe((customers) => this.customers.set(customers));
   }
 
   getById(id: number) {

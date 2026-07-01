@@ -1,12 +1,12 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { API_URL } from '../../../services/api.service';
 import { AuthResponseDto } from '../../models/dtos/auth-response.dto';
 import { LoginRequestDto } from '../../models/dtos/login-request.dto';
 import { RegisterRequestDto } from '../../models/dtos/register-request.dto';
 import { UserDto } from '../../models/dtos/user.dto';
 
-const API_URL = 'http://localhost:8080/api';
 const TOKEN_KEY = 'token';
 const USER_KEY = 'user';
 
@@ -29,11 +29,15 @@ export class AuthService {
   }
 
   login(request: LoginRequestDto) {
-    return this.http.post<AuthResponseDto>(`${API_URL}/iam/authentication/sign-in`, request);
+    return this.http.post<AuthResponseDto>(`${API_URL}/auth/sign-in`, request);
   }
 
   register(request: RegisterRequestDto) {
-    return this.http.post<AuthResponseDto>(`${API_URL}/iam/authentication/sign-up`, request);
+    return this.http.post<AuthResponseDto>(`${API_URL}/auth/sign-up`, request);
+  }
+
+  me() {
+    return this.http.get<UserDto>(`${API_URL}/auth/me`);
   }
 
   setSession(response: AuthResponseDto) {
