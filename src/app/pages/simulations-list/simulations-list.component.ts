@@ -55,7 +55,7 @@ import { SimulationService } from '../../simulations/services/api/simulation.ser
               <th>TEA</th>
               <th>TCEA</th>
               <th>Cuota<br />mensual</th>
-              <th>Estado</th>
+              <th>Plazo</th>
               <th>Acción</th>
             </tr>
           </thead>
@@ -66,10 +66,10 @@ import { SimulationService } from '../../simulations/services/api/simulation.ser
                 <td class="client">{{ clientName(simulation.clientId) }}</td>
                 <td>{{ institutionName(simulation.financialProductId) }}</td>
                 <td>{{ simulation.currency }} {{ simulation.financedAmount | number:'1.2-2' }}</td>
-                <td>{{ simulation.tea | number:'1.2-2' }}%</td>
-                <td class="tcea">{{ simulation.tcea | number:'1.2-2' }}%</td>
+                <td>{{ simulation.teaPercent | number:'1.2-2' }}%</td>
+                <td class="tcea">{{ simulation.tceaPercent | number:'1.2-2' }}%</td>
                 <td>{{ simulation.currency }} {{ simulation.monthlyPayment | number:'1.2-2' }}</td>
-                <td class="grace">{{ simulation.status }}</td>
+                <td class="grace">{{ simulation.termMonths }} meses</td>
                 <td class="actions">
                   <a [routerLink]="['/results', simulation.id]" title="Ver detalle">
                     <svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.7"/></svg>
