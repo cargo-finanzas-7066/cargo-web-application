@@ -3,9 +3,6 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CustomerDto } from '../../customers/models/dtos/customer.dto';
 import { CustomerService } from '../../customers/services/api/customer.service';
-import { FinancialInstitutionDto } from '../../financial-institutions/models/dtos/financial-institution.dto';
-import { FinancialInstitutionService } from '../../financial-institutions/services/api/financial-institution.service';
-import { FinancialProductService } from '../../financial-products/services/api/financial-product.service';
 import { SimulationDto } from '../../simulations/models/dtos/simulation.dto';
 import { SimulationService } from '../../simulations/services/api/simulation.service';
 import { VehicleDto } from '../../vehicles/models/dtos/vehicle.dto';
@@ -28,17 +25,17 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
         </header>
 
         <section class="metrics">
-          <article class="metric featured"><small>Cuota mensual</small><strong>{{ r.currency }} {{ r.monthlyPayment | number:'1.2-2' }}</strong></article>
-          <article class="metric"><small>Capital financiado</small><strong>{{ r.currency }} {{ r.financedAmount | number:'1.2-2' }}</strong></article>
-          <article class="metric"><small>TEA ⓘ</small><strong>{{ r.tea | number:'1.2-2' }}%</strong></article>
-          <article class="metric"><small>TEM ⓘ</small><strong>{{ r.tem | number:'1.2-2' }}%</strong></article>
-          <article class="metric"><small>TCEA ⓘ</small><strong class="green">{{ r.tcea | number:'1.2-2' }}%</strong></article>
-          <article class="metric"><small>VAN ⓘ</small><strong>{{ r.currency }} {{ r.van | number:'1.2-2' }}</strong></article>
-          <article class="metric"><small>TIR ⓘ</small><strong>{{ r.tir | number:'1.2-2' }}%</strong></article>
-          <article class="metric"><small>Cuota balón ⓘ</small><strong class="blue">{{ r.currency }} {{ r.balloonAmount | number:'1.2-2' }}</strong></article>
-          <article class="metric"><small>Interés total</small><strong>{{ r.currency }} {{ r.totalInterest | number:'1.2-2' }}</strong></article>
-          <article class="metric"><small>Costo total del crédito</small><strong>{{ r.currency }} {{ r.totalCreditCost | number:'1.2-2' }}</strong></article>
-          <article class="metric total"><small>Total a pagar</small><strong>{{ r.currency }} {{ r.totalPayment | number:'1.2-2' }}</strong></article>
+          <article class="metric featured"><small>Cuota mensual</small><strong><span class="cur">{{ r.currency }}</span>{{ r.monthlyPayment | number:'1.2-2' }}</strong></article>
+          <article class="metric"><small>Capital financiado</small><strong><span class="cur">{{ r.currency }}</span>{{ r.financedAmount | number:'1.2-2' }}</strong></article>
+          <article class="metric"><small>TEA ⓘ</small><strong>{{ r.teaPercent | number:'1.2-2' }}%</strong></article>
+          <article class="metric"><small>TEM ⓘ</small><strong>{{ r.temPercent | number:'1.2-2' }}%</strong></article>
+          <article class="metric"><small>TCEA ⓘ</small><strong class="green">{{ r.tceaPercent | number:'1.2-2' }}%</strong></article>
+          <article class="metric"><small>VAN ⓘ</small><strong><span class="cur">{{ r.currency }}</span>{{ r.van | number:'1.2-2' }}</strong></article>
+          <article class="metric"><small>TIR ⓘ</small><strong>{{ r.tirPercent | number:'1.2-2' }}%</strong></article>
+          <article class="metric"><small>Cuota balón ⓘ</small><strong class="blue"><span class="cur">{{ r.currency }}</span>{{ balloonAmount() | number:'1.2-2' }}</strong></article>
+          <article class="metric"><small>Interés total</small><strong><span class="cur">{{ r.currency }}</span>{{ r.totalInterest | number:'1.2-2' }}</strong></article>
+          <article class="metric"><small>Costo total del crédito</small><strong><span class="cur">{{ r.currency }}</span>{{ totalCreditCost() | number:'1.2-2' }}</strong></article>
+          <article class="metric total"><small>Total a pagar</small><strong><span class="cur">{{ r.currency }}</span>{{ r.totalPayment | number:'1.2-2' }}</strong></article>
         </section>
 
         <section class="schedule-card">
@@ -82,10 +79,10 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
                 <tr>
                   <td colspan="3">Totales</td>
                   <td>{{ r.currency }} {{ sum('payment') | number:'1.2-2' }}</td>
-                  <td>{{ r.currency }} {{ r.balloonAmount | number:'1.2-2' }}</td>
+                  <td>{{ r.currency }} {{ balloonAmount() | number:'1.2-2' }}</td>
                   <td>{{ r.currency }} {{ r.financedAmount | number:'1.2-2' }}</td>
                   <td>{{ r.currency }} {{ r.totalInsurance | number:'1.2-2' }}</td>
-                  <td>{{ r.currency }} {{ r.totalCommissions | number:'1.2-2' }}</td>
+                  <td>{{ r.currency }} {{ r.totalFees | number:'1.2-2' }}</td>
                   <td>{{ r.currency }} {{ r.totalPayment | number:'1.2-2' }}</td>
                   <td></td>
                 </tr>
@@ -110,14 +107,14 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
               <dt>Financiamiento</dt>
               <dd><span>Entidad:</span><strong class="badge">{{ institutionName() }}</strong></dd>
               <dd><span>Cap. financiado:</span><strong class="blue">{{ r.currency }} {{ r.financedAmount | number:'1.2-2' }}</strong></dd>
-              <dd><span>Cuota balón:</span><strong class="blue">{{ r.currency }} {{ r.balloonAmount | number:'1.2-2' }}</strong></dd>
+              <dd><span>Cuota balón:</span><strong class="blue">{{ r.currency }} {{ balloonAmount() | number:'1.2-2' }}</strong></dd>
               <dd><span>Moneda:</span><strong>{{ r.currency }}</strong></dd>
             </dl>
             <dl>
               <dt>Plazo y método</dt>
-              <dd><span>TEA:</span><strong>{{ r.tea | number:'1.2-2' }}%</strong></dd>
-              <dd><span>TEM:</span><strong>{{ r.tem | number:'1.2-2' }}%</strong></dd>
-              <dd><span>Plazo:</span><strong>{{ r.schedule?.length || 0 }} meses</strong></dd>
+              <dd><span>TEA:</span><strong>{{ r.teaPercent | number:'1.2-2' }}%</strong></dd>
+              <dd><span>TEM:</span><strong>{{ r.temPercent | number:'1.2-2' }}%</strong></dd>
+              <dd><span>Plazo:</span><strong>{{ r.termMonths }} meses</strong></dd>
               <dd><span>Tipo gracia:</span><strong>{{ graceLabel() }}</strong></dd>
               <dd><span>Método:</span><strong>Francés vencido ordinario</strong></dd>
               <dd><span>Base:</span><strong>30 días</strong></dd>
@@ -138,10 +135,11 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
     h1 { margin:0; font-size:32px; letter-spacing:-.03em; color:#111827; font-weight:900; }
     p { color:#6b7280; margin-top:8px; font-size:15px; }
     .saved { align-self:center; padding:5px 10px; border-radius:999px; background:#eaf8ef; color:#087a3d; font-size:11px; font-weight:900; text-transform:uppercase; }
-    .metrics { display:grid; grid-template-columns:repeat(6, 1fr); gap:14px; margin-bottom:34px; }
-    .metric { min-height:86px; padding:18px; background:#fff; border:1px solid #d9e1ee; border-radius:7px; box-shadow:0 1px 2px rgba(15,23,42,.05); }
-    .metric small { display:block; margin-bottom:10px; color:#6b7280; font-size:10px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
-    .metric strong { color:#111827; font-size:22px; line-height:1.25; }
+    .metrics { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:14px; margin-bottom:34px; }
+    .metric { min-height:86px; padding:18px; background:#fff; border:1px solid #d9e1ee; border-radius:7px; box-shadow:0 1px 2px rgba(15,23,42,.05); overflow:hidden; }
+    .metric small { display:block; margin-bottom:10px; color:#6b7280; font-size:10px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .metric strong { display:block; color:#111827; font-size:19px; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .metric strong .cur { margin-right:4px; font-size:11px; font-weight:800; opacity:.6; }
     .metric.featured { background:#0036a3; color:#fff; }
     .metric.featured small, .metric.featured strong, .metric.total small, .metric.total strong { color:#fff; }
     .metric.total { grid-column:span 2; background:#1b263a; }
@@ -179,8 +177,6 @@ export class ResultsComponent {
   private simSvc = inject(SimulationService);
   private clientSvc = inject(CustomerService);
   private vehicleSvc = inject(VehicleCatalogService);
-  private productSvc = inject(FinancialProductService);
-  private institutionSvc = inject(FinancialInstitutionService);
 
   simId = +(this.route.snapshot.params['id'] || 0);
   today = new Date().toLocaleDateString('es-PE');
@@ -214,21 +210,27 @@ export class ResultsComponent {
   }
 
   institutionName() {
-    const simulation = this.result();
-    if (!simulation) return '—';
-    const product = this.productSvc.getById(simulation.financialProductId);
-    if (!product) return '—';
-    const institution: FinancialInstitutionDto | undefined = this.institutionSvc.getById(product.financialInstitutionId);
-    return institution?.shortName || institution?.name || '—';
+    const snapshot = this.result()?.productSnapshot;
+    const name = snapshot?.['institutionName'];
+    return typeof name === 'string' && name ? name : '—';
+  }
+
+  balloonAmount() {
+    const schedule = this.result()?.schedule ?? [];
+    return schedule.reduce((total, row) => total + row.balloonPayment, 0);
+  }
+
+  totalCreditCost() {
+    const r = this.result();
+    if (!r) return 0;
+    return r.totalInterest + r.totalInsurance + r.totalFees;
   }
 
   graceLabel() {
-    const schedule = this.result()?.schedule ?? [];
-    const graceMonths = schedule.filter((row) => row.graceType !== 'NONE').length;
-    if (!graceMonths) return 'Sin gracia';
-    const type = schedule.find((row) => row.graceType !== 'NONE')?.graceType;
-    const label = type === 'TOTAL' ? 'Gracia total' : 'Gracia parcial';
-    return `${label} (${graceMonths}m)`;
+    const simulation = this.result();
+    if (!simulation || simulation.graceType === 'NONE') return 'Sin gracia';
+    const label = simulation.graceType === 'TOTAL' ? 'Gracia total' : 'Gracia parcial';
+    return `${label} (${simulation.graceMonths}m)`;
   }
 
   sum(field: 'payment') {
