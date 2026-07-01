@@ -2,10 +2,10 @@ import { DecimalPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Simulation } from '../../models';
 import { CustomerService } from '../../customers/services/api/customer.service';
 import { FinancialInstitutionService } from '../../financial-institutions/services/api/financial-institution.service';
-import { SimulationService } from '../../services/simulation.service';
+import { FinancialProductService } from '../../financial-products/services/api/financial-product.service';
+import { SimulationService } from '../../simulations/services/api/simulation.service';
 
 @Component({
   selector: 'app-simulations-list',
@@ -16,7 +16,7 @@ import { SimulationService } from '../../services/simulation.service';
       <header class="sim-header">
         <div>
           <h1>Simulaciones guardadas</h1>
-          <p>Consulta y compara simulaciones de crédito vehicular generadas en Soles bajo el método francés vencido ordinario.</p>
+          <p>Consulta simulaciones de crédito vehicular generadas bajo el método francés vencido ordinario.</p>
         </div>
         <a routerLink="/simulation/new" class="primary-action">
           <span>+</span>
@@ -31,18 +31,14 @@ import { SimulationService } from '../../services/simulation.service';
         </label>
         <label>
           <span>Entidad financiera ⓘ</span>
-          <select [(ngModel)]="entityFilter">
+          <select [(ngModel)]="institutionFilter">
             <option value="">Todas</option>
-            @for (entity of entitySvc.institutions(); track entity.id) {
-              <option [value]="entity.id">{{ entity.shortName || entity.name }}</option>
+            @for (institution of institutionSvc.institutions(); track institution.id) {
+              <option [value]="institution.id">{{ institution.shortName || institution.name }}</option>
             }
           </select>
         </label>
-        <label>
-          <span>Fecha ⓘ</span>
-          <input type="date" [(ngModel)]="dateFilter" />
-        </label>
-        <button type="button" class="filter-btn">
+        <button type="button" class="filter-btn" (click)="simSvc.refresh()">
           <svg viewBox="0 0 24 24"><path d="M3 5h18l-7 8v5l-4 2v-7L3 5Z"/></svg>
           Filtrar
         </button>
@@ -59,42 +55,35 @@ import { SimulationService } from '../../services/simulation.service';
               <th>TEA</th>
               <th>TCEA</th>
               <th>Cuota<br />mensual</th>
-              <th>Gracia</th>
+              <th>Estado</th>
               <th>Acción</th>
             </tr>
           </thead>
           <tbody>
             @for (simulation of filtered(); track simulation.id) {
               <tr>
-                <td class="code">{{ simulation.code || codeFor(simulation) }}</td>
+                <td class="code">{{ simulation.code }}</td>
                 <td class="client">{{ clientName(simulation.clientId) }}</td>
-                <td>{{ entityName(simulation.entityId) }}</td>
-                <td>S/ {{ simulation.financedAmount | number:'1.2-2' }}</td>
+                <td>{{ institutionName(simulation.financialProductId) }}</td>
+                <td>{{ simulation.currency }} {{ simulation.financedAmount | number:'1.2-2' }}</td>
                 <td>{{ simulation.tea | number:'1.2-2' }}%</td>
-                <td class="tcea">{{ simulation.tcea || tceaFallback(simulation.tea) | number:'1.2-2' }}%</td>
-                <td>S/ {{ simulation.monthlyPayment || 0 | number:'1.2-2' }}</td>
-                <td class="grace">{{ graceLabel(simulation) }}</td>
+                <td class="tcea">{{ simulation.tcea | number:'1.2-2' }}%</td>
+                <td>{{ simulation.currency }} {{ simulation.monthlyPayment | number:'1.2-2' }}</td>
+                <td class="grace">{{ simulation.status }}</td>
                 <td class="actions">
-                  <a routerLink="/simulation/new" title="Editar">
-                    <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="m16.5 3.5 4 4L8 20l-5 1 1-5Z"/></svg>
-                  </a>
                   <a [routerLink]="['/results', simulation.id]" title="Ver detalle">
                     <svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.7"/></svg>
                   </a>
+                  <button type="button" title="Eliminar" (click)="deleteSimulation(simulation.id)">
+                    <svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/></svg>
+                  </button>
                 </td>
               </tr>
             }
           </tbody>
         </table>
         <footer>
-          <span>Mostrando 1-{{ filtered().length }} de {{ simSvc.simulations().length || 28 }} simulaciones</span>
-          <div class="pager">
-            <button type="button">‹</button>
-            <button type="button" class="active">1</button>
-            <button type="button">2</button>
-            <button type="button">3</button>
-            <button type="button">›</button>
-          </div>
+          <span>Mostrando 1-{{ filtered().length }} de {{ simSvc.simulations().length }} simulaciones</span>
         </footer>
       </section>
     </section>
@@ -121,11 +110,8 @@ import { SimulationService } from '../../services/simulation.service';
     .tcea { color:#087a3d; font-weight:900; }
     .grace { color:#64748b; font-size:12px; line-height:1.25; }
     .actions { display:flex; gap:14px; }
-    .actions a { color:#8aa0bf; display:inline-flex; }
+    .actions a, .actions button { color:#8aa0bf; display:inline-flex; border:0; background:transparent; cursor:pointer; padding:0; }
     footer { display:flex; justify-content:space-between; align-items:center; padding:18px 24px; border-top:1px solid #edf1f6; color:#64748b; font-size:12px; }
-    .pager { display:flex; gap:8px; }
-    .pager button { width:34px; height:34px; border:1px solid #d4dce9; border-radius:3px; background:#fff; color:#0f172a; cursor:pointer; }
-    .pager .active { background:#0036a3; color:#fff; border-color:#0036a3; }
     @media (max-width: 900px) {
       .sim-header, footer { flex-direction:column; gap:16px; align-items:flex-start; }
       .filters-card { grid-template-columns:1fr; }
@@ -135,47 +121,36 @@ import { SimulationService } from '../../services/simulation.service';
 export class SimulationsListComponent {
   simSvc = inject(SimulationService);
   clientSvc = inject(CustomerService);
-  entitySvc = inject(FinancialInstitutionService);
+  productSvc = inject(FinancialProductService);
+  institutionSvc = inject(FinancialInstitutionService);
   query = '';
-  entityFilter = '';
-  dateFilter = '';
+  institutionFilter = '';
 
   filtered() {
     const query = this.query.trim().toLowerCase();
     return this.simSvc.simulations().filter((simulation) => {
       const matchesQuery = !query
-        || (simulation.code || '').toLowerCase().includes(query)
+        || simulation.code.toLowerCase().includes(query)
         || this.clientName(simulation.clientId).toLowerCase().includes(query);
-      const matchesEntity = !this.entityFilter || String(simulation.entityId) === this.entityFilter;
-      return matchesQuery && matchesEntity;
-    }).slice(0, 6);
-  }
-
-  codeFor(simulation: Simulation) {
-    return `SIM-${String(simulation.id || 1).padStart(4, '0')}`;
+      const matchesInstitution = !this.institutionFilter
+        || String(this.productSvc.getById(simulation.financialProductId)?.financialInstitutionId ?? '') === this.institutionFilter;
+      return matchesQuery && matchesInstitution;
+    });
   }
 
   clientName(id: number) {
     const client = this.clientSvc.getById(id);
-    return client ? `${client.names} ${client.surnames}` : 'Roberto Gómez Valdez';
+    return client ? `${client.names} ${client.surnames}` : '—';
   }
 
-  entityName(id: number) {
-    const entity = this.entitySvc.getById(id);
-    return entity?.shortName || entity?.name || 'BCP';
+  institutionName(financialProductId: number) {
+    const product = this.productSvc.getById(financialProductId);
+    if (!product) return '—';
+    const institution = this.institutionSvc.getById(product.financialInstitutionId);
+    return institution?.shortName || institution?.name || '—';
   }
 
-  tceaFallback(tea: number) {
-    return tea + 2.2;
-  }
-
-  graceLabel(simulation: Simulation) {
-    if (simulation.graceType === 'P' || simulation.graceType === 'partial') {
-      return `Gracia parcial (${simulation.graceMonths || 1}m)`;
-    }
-    if (simulation.graceType === 'T' || simulation.graceType === 'total') {
-      return `Gracia total (${simulation.graceMonths || 1}m)`;
-    }
-    return 'Sin gracia';
+  deleteSimulation(id: number) {
+    this.simSvc.delete(id).subscribe();
   }
 }

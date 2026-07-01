@@ -1,12 +1,13 @@
 import { DecimalPipe, SlicePipe } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Simulation, SimulationResult } from '../../models';
 import { CustomerDto } from '../../customers/models/dtos/customer.dto';
 import { CustomerService } from '../../customers/services/api/customer.service';
 import { FinancialInstitutionDto } from '../../financial-institutions/models/dtos/financial-institution.dto';
 import { FinancialInstitutionService } from '../../financial-institutions/services/api/financial-institution.service';
-import { SimulationService } from '../../services/simulation.service';
+import { FinancialProductService } from '../../financial-products/services/api/financial-product.service';
+import { SimulationDto } from '../../simulations/models/dtos/simulation.dto';
+import { SimulationService } from '../../simulations/services/api/simulation.service';
 import { VehicleDto } from '../../vehicles/models/dtos/vehicle.dto';
 import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catalog.service';
 
@@ -17,7 +18,7 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
   template: `
     @if (result(); as r) {
       <section class="results-page">
-        <div class="crumb">Simulaciones › <strong>Resultado de Simulación {{ simulation()?.code || ('#' + simId) }}</strong></div>
+        <div class="crumb">Simulaciones › <strong>Resultado de Simulación {{ r.code || ('#' + simId) }}</strong></div>
         <header class="results-head">
           <div>
             <h1>Resultados de simulación</h1>
@@ -27,23 +28,23 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
         </header>
 
         <section class="metrics">
-          <article class="metric featured"><small>Cuota mensual</small><strong>S/ {{ r.monthlyPayment | number:'1.2-2' }}</strong></article>
-          <article class="metric"><small>Capital financiado</small><strong>S/ {{ r.financedAmount | number:'1.2-2' }}</strong></article>
+          <article class="metric featured"><small>Cuota mensual</small><strong>{{ r.currency }} {{ r.monthlyPayment | number:'1.2-2' }}</strong></article>
+          <article class="metric"><small>Capital financiado</small><strong>{{ r.currency }} {{ r.financedAmount | number:'1.2-2' }}</strong></article>
           <article class="metric"><small>TEA ⓘ</small><strong>{{ r.tea | number:'1.2-2' }}%</strong></article>
           <article class="metric"><small>TEM ⓘ</small><strong>{{ r.tem | number:'1.2-2' }}%</strong></article>
           <article class="metric"><small>TCEA ⓘ</small><strong class="green">{{ r.tcea | number:'1.2-2' }}%</strong></article>
-          <article class="metric"><small>VAN ⓘ</small><strong>S/ {{ r.van | number:'1.2-2' }}</strong></article>
+          <article class="metric"><small>VAN ⓘ</small><strong>{{ r.currency }} {{ r.van | number:'1.2-2' }}</strong></article>
           <article class="metric"><small>TIR ⓘ</small><strong>{{ r.tir | number:'1.2-2' }}%</strong></article>
-          <article class="metric"><small>Cuota balón ⓘ</small><strong class="blue">S/ {{ r.balloonAmount | number:'1.2-2' }}</strong></article>
-          <article class="metric"><small>Interés total</small><strong>S/ {{ r.totalInterest | number:'1.2-2' }}</strong></article>
-          <article class="metric"><small>Costo total del crédito</small><strong>S/ {{ r.totalCreditCost | number:'1.2-2' }}</strong></article>
-          <article class="metric total"><small>Total a pagar</small><strong>S/ {{ r.totalPayment | number:'1.2-2' }}</strong></article>
+          <article class="metric"><small>Cuota balón ⓘ</small><strong class="blue">{{ r.currency }} {{ r.balloonAmount | number:'1.2-2' }}</strong></article>
+          <article class="metric"><small>Interés total</small><strong>{{ r.currency }} {{ r.totalInterest | number:'1.2-2' }}</strong></article>
+          <article class="metric"><small>Costo total del crédito</small><strong>{{ r.currency }} {{ r.totalCreditCost | number:'1.2-2' }}</strong></article>
+          <article class="metric total"><small>Total a pagar</small><strong>{{ r.currency }} {{ r.totalPayment | number:'1.2-2' }}</strong></article>
         </section>
 
         <section class="schedule-card">
           <header>
             <h2>▣ Cronograma de pagos</h2>
-            <span>Soles (PEN)</span>
+            <span>{{ r.currency }}</span>
           </header>
           <div class="schedule-scroll">
             <table>
@@ -55,9 +56,8 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
                   <th>Cuota</th>
                   <th>Cuota balón</th>
                   <th>Amortización</th>
-                  <th>Seg. vehicular</th>
-                  <th>Seg. desgrav.</th>
-                  <th>Portes</th>
+                  <th>Seguros</th>
+                  <th>Comisión</th>
                   <th>Pago total ⓘ</th>
                   <th>Saldo final ⓘ</th>
                 </tr>
@@ -67,28 +67,26 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
                   <tr>
                     <td>{{ row.period }}</td>
                     <td>{{ row.date | slice:0:10 }}</td>
-                    <td>S/ {{ row.initialBalance | number:'1.2-2' }}</td>
-                    <td>S/ {{ row.payment | number:'1.2-2' }}</td>
-                    <td>S/ {{ row.balloonPayment | number:'1.2-2' }}</td>
-                    <td>S/ {{ row.amortization | number:'1.2-2' }}</td>
-                    <td>S/ {{ vehicleInsurancePortion(row.insurance) | number:'1.2-2' }}</td>
-                    <td>S/ {{ disbursementInsurancePortion(row.insurance) | number:'1.2-2' }}</td>
-                    <td>S/ {{ row.commission | number:'1.2-2' }}</td>
-                    <td class="blue">S/ {{ row.totalPayment | number:'1.2-2' }}</td>
-                    <td>S/ {{ row.finalBalance | number:'1.2-2' }}</td>
+                    <td>{{ r.currency }} {{ row.initialBalance | number:'1.2-2' }}</td>
+                    <td>{{ r.currency }} {{ row.payment | number:'1.2-2' }}</td>
+                    <td>{{ r.currency }} {{ row.balloonPayment | number:'1.2-2' }}</td>
+                    <td>{{ r.currency }} {{ row.amortization | number:'1.2-2' }}</td>
+                    <td>{{ r.currency }} {{ row.insurance | number:'1.2-2' }}</td>
+                    <td>{{ r.currency }} {{ row.commission | number:'1.2-2' }}</td>
+                    <td class="blue">{{ r.currency }} {{ row.totalPayment | number:'1.2-2' }}</td>
+                    <td>{{ r.currency }} {{ row.finalBalance | number:'1.2-2' }}</td>
                   </tr>
                 }
               </tbody>
               <tfoot>
                 <tr>
                   <td colspan="3">Totales</td>
-                  <td>S/ {{ sum('payment') | number:'1.2-2' }}</td>
-                  <td>S/ {{ r.balloonAmount | number:'1.2-2' }}</td>
-                  <td>S/ {{ r.financedAmount | number:'1.2-2' }}</td>
-                  <td>S/ {{ r.totalInsurance | number:'1.2-2' }}</td>
-                  <td></td>
-                  <td>S/ {{ r.totalCommissions | number:'1.2-2' }}</td>
-                  <td>S/ {{ r.totalPayment | number:'1.2-2' }}</td>
+                  <td>{{ r.currency }} {{ sum('payment') | number:'1.2-2' }}</td>
+                  <td>{{ r.currency }} {{ r.balloonAmount | number:'1.2-2' }}</td>
+                  <td>{{ r.currency }} {{ r.financedAmount | number:'1.2-2' }}</td>
+                  <td>{{ r.currency }} {{ r.totalInsurance | number:'1.2-2' }}</td>
+                  <td>{{ r.currency }} {{ r.totalCommissions | number:'1.2-2' }}</td>
+                  <td>{{ r.currency }} {{ r.totalPayment | number:'1.2-2' }}</td>
                   <td></td>
                 </tr>
               </tfoot>
@@ -102,26 +100,24 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
             <dl>
               <dt>Cliente y documento</dt>
               <dd><span>Cliente:</span><strong>{{ clientName() }}</strong></dd>
-              <dd><span>Documento:</span><strong>{{ client()?.docType || 'DNI' }} {{ client()?.docNumber || '45829103' }}</strong></dd>
+              <dd><span>Documento:</span><strong>{{ client()?.docType || 'DNI' }} {{ client()?.docNumber || '—' }}</strong></dd>
             </dl>
             <dl>
-              <dt>Vehículo y valor</dt>
+              <dt>Vehículo</dt>
               <dd><span>Vehículo:</span><strong>{{ vehicleName() }}</strong></dd>
-              <dd><span>Valor vehículo:</span><strong>S/ {{ (simulation()?.vehiclePrice || 0) | number:'1.2-2' }}</strong></dd>
-              <dd><span>Cuota inicial:</span><strong>S/ {{ (simulation()?.downPayment || 0) | number:'1.2-2' }}</strong></dd>
             </dl>
             <dl>
               <dt>Financiamiento</dt>
-              <dd><span>Entidad:</span><strong class="badge">{{ entity()?.shortName || entity()?.name || 'BCP' }}</strong></dd>
-              <dd><span>Cap. financiado:</span><strong class="blue">S/ {{ r.financedAmount | number:'1.2-2' }}</strong></dd>
-              <dd><span>Cuota balón:</span><strong class="blue">S/ {{ r.balloonAmount | number:'1.2-2' }}</strong></dd>
-              <dd><span>Moneda:</span><strong>Soles (PEN)</strong></dd>
+              <dd><span>Entidad:</span><strong class="badge">{{ institutionName() }}</strong></dd>
+              <dd><span>Cap. financiado:</span><strong class="blue">{{ r.currency }} {{ r.financedAmount | number:'1.2-2' }}</strong></dd>
+              <dd><span>Cuota balón:</span><strong class="blue">{{ r.currency }} {{ r.balloonAmount | number:'1.2-2' }}</strong></dd>
+              <dd><span>Moneda:</span><strong>{{ r.currency }}</strong></dd>
             </dl>
             <dl>
               <dt>Plazo y método</dt>
               <dd><span>TEA:</span><strong>{{ r.tea | number:'1.2-2' }}%</strong></dd>
               <dd><span>TEM:</span><strong>{{ r.tem | number:'1.2-2' }}%</strong></dd>
-              <dd><span>Plazo:</span><strong>{{ simulation()?.term || 0 }} meses</strong></dd>
+              <dd><span>Plazo:</span><strong>{{ r.schedule?.length || 0 }} meses</strong></dd>
               <dd><span>Tipo gracia:</span><strong>{{ graceLabel() }}</strong></dd>
               <dd><span>Método:</span><strong>Francés vencido ordinario</strong></dd>
               <dd><span>Base:</span><strong>30 días</strong></dd>
@@ -183,68 +179,59 @@ export class ResultsComponent {
   private simSvc = inject(SimulationService);
   private clientSvc = inject(CustomerService);
   private vehicleSvc = inject(VehicleCatalogService);
-  private entitySvc = inject(FinancialInstitutionService);
+  private productSvc = inject(FinancialProductService);
+  private institutionSvc = inject(FinancialInstitutionService);
 
   simId = +(this.route.snapshot.params['id'] || 0);
   today = new Date().toLocaleDateString('es-PE');
-  result = signal<SimulationResult | null>(null);
-  simulation = signal<Simulation | undefined>(undefined);
-  client = signal<CustomerDto | undefined>(undefined);
-  vehicle = signal<VehicleDto | undefined>(undefined);
-  entity = signal<FinancialInstitutionDto | undefined>(undefined);
+  result = signal<SimulationDto | null>(null);
+  client = computed<CustomerDto | undefined>(() => {
+    const simulation = this.result();
+    return simulation ? this.clientSvc.getById(simulation.clientId) : undefined;
+  });
+  vehicle = computed<VehicleDto | undefined>(() => {
+    const simulation = this.result();
+    return simulation ? this.vehicleSvc.getById(simulation.vehicleId) : undefined;
+  });
 
   constructor() {
-    this.loadSimulation();
-    const navigationResult = history.state?.result as SimulationResult | undefined;
+    const navigationResult = history.state?.result as SimulationDto | undefined;
     if (navigationResult) {
       this.result.set(navigationResult);
     } else {
-      this.simSvc.calculate(this.simId).subscribe((result) => this.result.set(result));
+      this.simSvc.getByIdRemote(this.simId).subscribe((simulation) => this.result.set(simulation));
     }
-  }
-
-  loadSimulation() {
-    const local = this.simSvc.getById(this.simId);
-    if (local) {
-      this.hydrate(local);
-    }
-    this.simSvc.getByIdRemote(this.simId).subscribe((simulation) => this.hydrate(simulation));
-  }
-
-  hydrate(simulation: Simulation) {
-    this.simulation.set(simulation);
-    this.client.set(this.clientSvc.getById(simulation.clientId));
-    this.vehicle.set(this.vehicleSvc.getById(simulation.vehicleId));
-    this.entity.set(this.entitySvc.getById(simulation.entityId));
   }
 
   clientName() {
     const client = this.client();
-    return client ? `${client.names} ${client.surnames}` : 'Roberto Gómez Valdez';
+    return client ? `${client.names} ${client.surnames}` : '—';
   }
 
   vehicleName() {
     const vehicle = this.vehicle();
-    return vehicle ? `${vehicle.brand} ${vehicle.model} ${vehicle.year}` : 'Toyota Corolla 2024';
+    return vehicle ? `${vehicle.brand} ${vehicle.model} ${vehicle.year}` : '—';
+  }
+
+  institutionName() {
+    const simulation = this.result();
+    if (!simulation) return '—';
+    const product = this.productSvc.getById(simulation.financialProductId);
+    if (!product) return '—';
+    const institution: FinancialInstitutionDto | undefined = this.institutionSvc.getById(product.financialInstitutionId);
+    return institution?.shortName || institution?.name || '—';
   }
 
   graceLabel() {
-    const type = this.simulation()?.graceType;
-    if (type === 'P' || type === 'partial') return 'Gracia parcial';
-    if (type === 'T' || type === 'total') return 'Gracia total';
-    return 'Sin gracia';
-  }
-
-  vehicleInsurancePortion(totalInsurance: number) {
-    const simulation = this.simulation();
-    return simulation ? (simulation.vehiclePrice * (simulation.insuranceVehicle / 100)) / 12 : 80;
-  }
-
-  disbursementInsurancePortion(totalInsurance: number) {
-    return Math.max(0, totalInsurance - this.vehicleInsurancePortion(totalInsurance));
+    const schedule = this.result()?.schedule ?? [];
+    const graceMonths = schedule.filter((row) => row.graceType !== 'NONE').length;
+    if (!graceMonths) return 'Sin gracia';
+    const type = schedule.find((row) => row.graceType !== 'NONE')?.graceType;
+    const label = type === 'TOTAL' ? 'Gracia total' : 'Gracia parcial';
+    return `${label} (${graceMonths}m)`;
   }
 
   sum(field: 'payment') {
-    return this.result()?.schedule.reduce((total, row) => total + row[field], 0) || 0;
+    return this.result()?.schedule?.reduce((total, row) => total + row[field], 0) || 0;
   }
 }
