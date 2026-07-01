@@ -13,7 +13,7 @@ export class FinancialInstitutionService {
   }
 
   refresh() {
-    this.http.get<FinancialInstitutionDto[]>(`${API_URL}/entities`).subscribe((institutions) => {
+    this.http.get<FinancialInstitutionDto[]>(`${API_URL}/financial-institutions`).subscribe((institutions) => {
       this.institutions.set(institutions);
     });
   }
