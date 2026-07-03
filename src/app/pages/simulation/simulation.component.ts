@@ -75,7 +75,7 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
             <table class="mini-table">
               <thead><tr><th>Documento</th><th>Nombre completo</th><th>Acción</th></tr></thead>
               <tbody>
-                @for (client of filteredClients(); track client.id) {
+                @for (client of filteredClients(); track client.id ?? client.docNumber) {
                   <tr>
                     <td>{{ client.docNumber }}</td>
                     <td>{{ client.names }} {{ client.surnames }}</td>
@@ -429,6 +429,8 @@ export class SimulationComponent {
   });
 
   selectClient(client: CustomerDto) {
+    if (!client.id) return;
+
     this.selectedClient.set(client);
     this.request.clientId = client.id;
   }
