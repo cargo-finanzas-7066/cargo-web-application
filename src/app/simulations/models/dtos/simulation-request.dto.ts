@@ -7,6 +7,7 @@ export interface SimulationRequestDto {
   vehiclePrice?: number;
   downPaymentPercent: number;
   termMonths: number;
+  cokTeaPercent: number;
   firstPaymentDate: string;
   paymentDay: number;
   graceType: GraceType;

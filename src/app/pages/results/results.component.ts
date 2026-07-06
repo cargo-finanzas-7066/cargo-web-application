@@ -28,6 +28,8 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
           <article class="metric"><small>Capital financiado</small><strong><span class="cur">{{ r.currency }}</span>{{ r.financedAmount | number:'1.2-2' }}</strong></article>
           <article class="metric"><small>TEA ⓘ</small><strong>{{ r.teaPercent | number:'1.2-2' }}%</strong></article>
           <article class="metric"><small>TEM ⓘ</small><strong>{{ r.temPercent | number:'1.2-2' }}%</strong></article>
+          <article class="metric"><small>COK ⓘ</small><strong>{{ r.cokTeaPercent | number:'1.2-2' }}%</strong></article>
+          <article class="metric"><small>COK mensual ⓘ</small><strong>{{ r.cokTemPercent | number:'1.4-4' }}%</strong></article>
           <article class="metric"><small>TCEA ⓘ</small><strong class="green">{{ r.tceaPercent | number:'1.2-2' }}%</strong></article>
           <article class="metric"><small>VAN ⓘ</small><strong><span class="cur">{{ r.currency }}</span>{{ r.van | number:'1.2-2' }}</strong></article>
           <article class="metric"><small>TIR ⓘ</small><strong>{{ r.tirPercent | number:'1.2-2' }}%</strong></article>
@@ -55,6 +57,8 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
                   <th>Seguros</th>
                   <th>Comisión</th>
                   <th>Pago total ⓘ</th>
+                  <th>Flujo final</th>
+                  <th>Flujo base</th>
                   <th>Saldo final ⓘ</th>
                 </tr>
               </thead>
@@ -70,6 +74,8 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
                     <td>{{ r.currency }} {{ row.insurance | number:'1.2-2' }}</td>
                     <td>{{ r.currency }} {{ row.commission | number:'1.2-2' }}</td>
                     <td class="blue">{{ r.currency }} {{ row.totalPayment | number:'1.2-2' }}</td>
+                    <td>{{ r.currency }} {{ row.finalFlow | number:'1.2-2' }}</td>
+                    <td>{{ r.currency }} {{ row.baseFlow | number:'1.2-2' }}</td>
                     <td>{{ r.currency }} {{ row.finalBalance | number:'1.2-2' }}</td>
                   </tr>
                 }
@@ -83,6 +89,8 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
                   <td>{{ r.currency }} {{ r.totalInsurance | number:'1.2-2' }}</td>
                   <td>{{ r.currency }} {{ r.totalFees | number:'1.2-2' }}</td>
                   <td>{{ r.currency }} {{ r.totalPayment | number:'1.2-2' }}</td>
+                  <td>{{ r.currency }} {{ sum('finalFlow') | number:'1.2-2' }}</td>
+                  <td>{{ r.currency }} {{ sum('baseFlow') | number:'1.2-2' }}</td>
                   <td></td>
                 </tr>
               </tfoot>
@@ -113,6 +121,8 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
               <dt>Plazo y método</dt>
               <dd><span>TEA:</span><strong>{{ r.teaPercent | number:'1.2-2' }}%</strong></dd>
               <dd><span>TEM:</span><strong>{{ r.temPercent | number:'1.2-2' }}%</strong></dd>
+              <dd><span>COK:</span><strong>{{ r.cokTeaPercent | number:'1.2-2' }}%</strong></dd>
+              <dd><span>COK mensual:</span><strong>{{ r.cokTemPercent | number:'1.4-4' }}%</strong></dd>
               <dd><span>Plazo:</span><strong>{{ r.termMonths }} meses</strong></dd>
               <dd><span>Tipo gracia:</span><strong>{{ graceLabel() }}</strong></dd>
               <dd><span>Método:</span><strong>Francés vencido ordinario</strong></dd>
@@ -229,7 +239,7 @@ export class ResultsComponent {
     return `${label} (${simulation.graceMonths}m)`;
   }
 
-  sum(field: 'payment') {
+  sum(field: 'payment' | 'finalFlow' | 'baseFlow') {
     return this.result()?.schedule?.reduce((total, row) => total + row[field], 0) || 0;
   }
 }

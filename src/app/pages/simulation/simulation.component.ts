@@ -200,6 +200,24 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
             </div>
           </article>
 
+          <article class="form-card cok-card">
+            <h2><span>◇</span> Costo de oportunidad (COK)</h2>
+            <div class="form-grid">
+              <label>
+                <span>COK (%) ⓘ</span>
+                <input type="number" min="0" step="0.0001" [(ngModel)]="request.cokTeaPercent" (ngModelChange)="validateCok()" />
+              </label>
+              <label>
+                <span>COK mensual (%)</span>
+                <input [value]="cokMonthlyPercent() | number:'1.4-4'" disabled />
+              </label>
+            </div>
+            <p class="note">El COK debe ser mayor o igual a la TEA del producto. Para el VAN se usa (1 + COK)^(1/12) - 1.</p>
+            @if (cokError()) {
+              <p class="error">{{ cokError() }}</p>
+            }
+          </article>
+
           <article class="form-card">
             <h2><span>⌛</span> Periodo de gracia</h2>
             <div class="grace-grid">
@@ -272,6 +290,7 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
             </dl>
             <div class="summary-columns">
               <div><small>Tasas</small><strong>TEA: {{ (selectedProduct()?.teaPercent | number:'1.2-2') || '-' }}%</strong></div>
+              <div><small>COK</small><strong>COK: {{ request.cokTeaPercent | number:'1.2-2' }}%</strong><strong>Mensual: {{ cokMonthlyPercent() | number:'1.4-4' }}%</strong></div>
               <div><small>Plazo y gracia</small><strong>Plazo: {{ request.termMonths }} meses</strong><strong>Gracia: {{ request.graceMonths }}m</strong></div>
               <div><small>Compra inteligente</small><strong>Balón: {{ balloonEnabled ? (request.balloonPercent + '%') : 'No aplica' }}</strong></div>
             </div>
@@ -395,6 +414,7 @@ export class SimulationComponent {
   clientQuery = '';
   balloonEnabled = false;
   balloonError = signal('');
+  cokError = signal('');
   submitError = signal('');
   calculating = signal(false);
   selectedClient = signal<CustomerDto | undefined>(undefined);
@@ -413,6 +433,7 @@ export class SimulationComponent {
     financialProductId: 0,
     downPaymentPercent: 20,
     termMonths: 36,
+    cokTeaPercent: 0,
     firstPaymentDate: '',
     paymentDay: 5,
     graceType: 'NONE',
@@ -450,10 +471,14 @@ export class SimulationComponent {
     if (product) {
       this.request.termMonths = Math.min(Math.max(this.request.termMonths, product.minTermMonths), product.maxTermMonths);
       this.request.downPaymentPercent = Math.min(Math.max(this.request.downPaymentPercent, product.minDownPaymentPercent), product.maxDownPaymentPercent);
+      if (!this.request.cokTeaPercent || this.request.cokTeaPercent < product.teaPercent) {
+        this.request.cokTeaPercent = product.teaPercent;
+      }
       if (!product.balloonAllowed) {
         this.balloonEnabled = false;
         this.request.balloonPercent = 0;
       }
+      this.validateCok();
     }
   }
 
@@ -476,6 +501,7 @@ export class SimulationComponent {
   }
 
   goStep3() {
+    if (!this.validateCok()) return;
     this.step.set(3);
   }
 
@@ -506,8 +532,32 @@ export class SimulationComponent {
     return true;
   }
 
+  validateCok() {
+    const product = this.selectedProduct();
+    if (!product) {
+      this.cokError.set('');
+      return true;
+    }
+    const value = Number(this.request.cokTeaPercent);
+    if (!Number.isFinite(value)) {
+      this.cokError.set('Ingresa el COK como porcentaje.');
+      return false;
+    }
+    if (value < product.teaPercent) {
+      this.cokError.set(`El COK no puede ser menor a la TEA del producto (${product.teaPercent.toFixed(2)}%).`);
+      return false;
+    }
+    this.cokError.set('');
+    return true;
+  }
+
+  cokMonthlyPercent() {
+    const cok = (Number(this.request.cokTeaPercent) || 0) / 100;
+    return Math.round((Math.pow(1 + cok, 1 / 12) - 1) * 1000000) / 10000;
+  }
+
   calculate() {
-    if (this.calculating() || !this.validateBalloon()) return;
+    if (this.calculating() || !this.validateBalloon() || !this.validateCok()) return;
     this.submitError.set('');
     this.calculating.set(true);
     this.request.vehiclePrice = this.vehiclePrice;

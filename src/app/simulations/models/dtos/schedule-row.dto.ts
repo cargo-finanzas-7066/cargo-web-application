@@ -9,6 +9,8 @@ export interface ScheduleRowDto {
   insurance: number;
   commission: number;
   totalPayment: number;
+  finalFlow: number;
+  baseFlow: number;
   finalBalance: number;
   graceType: 'NONE' | 'PARTIAL' | 'TOTAL';
 }
