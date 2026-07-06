@@ -85,5 +85,5 @@ tr:hover td { background: #F1F5F9; }
 .page-header {
   display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;
 }
-.page-header h1 { font-size: 24px; font-weight: 700; }
+.page-header h1 { font-size: 32px; line-height: 1.1; font-weight: 700; color: #111827; }
 .page-header p { color: var(--text-muted); margin-top: 2px; }

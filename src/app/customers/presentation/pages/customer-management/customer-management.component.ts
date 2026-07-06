@@ -1,13 +1,15 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { PageContainerComponent } from '../../../../shared/components/page-container/page-container.component';
 import { CustomerDto } from '../../../models/dtos/customer.dto';
 import { CustomerService } from '../../../services/api/customer.service';
 
 @Component({
   selector: 'app-customer-management',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, PageContainerComponent],
   template: `
+    <app-page-container>
     <section class="customers-page">
       <section class="search-card">
         <label>
@@ -29,7 +31,7 @@ import { CustomerService } from '../../../services/api/customer.service';
             </tr>
           </thead>
           <tbody>
-            @for (customer of visibleCustomers(); track customer.id) {
+            @for (customer of visibleCustomers(); track customer.id ?? customer.docNumber) {
               <tr>
                 <td>{{ customer.docType }} {{ customer.docNumber }}</td>
                 <td class="customer-name">{{ fullName(customer) }}</td>
@@ -48,7 +50,7 @@ import { CustomerService } from '../../../services/api/customer.service';
           </tbody>
         </table>
         <footer class="table-footer">
-          <span>Mostrando 1-{{ visibleCustomers().length }} de 1,284 clientes</span>
+          <span>Mostrando {{ visibleCustomers().length }} de {{ totalCustomers() }} clientes</span>
           <div class="pagination">
             <button disabled>‹</button>
             <button class="active">1</button>
@@ -86,8 +88,12 @@ import { CustomerService } from '../../../services/api/customer.service';
                 <input [(ngModel)]="form.docNumber" name="docNumber" placeholder="Ej. 45829103" required>
               </label>
               <label>
-                <span>Nombres y apellidos <small>ⓘ</small></span>
-                <input [(ngModel)]="form.fullName" name="fullName" placeholder="Ej. Carlos Eduardo Méndez" required>
+                <span>Nombres <small>ⓘ</small></span>
+                <input [(ngModel)]="form.names" name="names" placeholder="Ej. Carlos Eduardo" required>
+              </label>
+              <label>
+                <span>Apellidos <small>ⓘ</small></span>
+                <input [(ngModel)]="form.surnames" name="surnames" placeholder="Ej. Mendez Torres" required>
               </label>
               <label>
                 <span>Correo electrónico <small>ⓘ</small></span>
@@ -131,6 +137,7 @@ import { CustomerService } from '../../../services/api/customer.service';
         </div>
       }
     </section>
+    </app-page-container>
   `,
   styles: [`
     .customers-page { position: relative; min-height: calc(100vh - 96px); }
@@ -189,13 +196,14 @@ export class CustomerManagementComponent {
   editingCustomer = signal<CustomerDto | null>(null);
   customerToDelete = signal<CustomerDto | null>(null);
   form = this.emptyForm();
+  totalCustomers = computed(() => this.customerService.customers().length);
 
   visibleCustomers = computed(() => {
     const text = this.query.trim().toLowerCase();
     return this.customerService.customers().filter((customer) => {
       const haystack = `${customer.docType} ${customer.docNumber} ${this.fullName(customer)} ${customer.email}`.toLowerCase();
       return !text || haystack.includes(text);
-    }).slice(0, 3);
+    });
   });
 
   openCreator() {
@@ -209,7 +217,8 @@ export class CustomerManagementComponent {
     this.form = {
       docType: customer.docType,
       docNumber: customer.docNumber,
-      fullName: this.fullName(customer),
+      names: customer.names,
+      surnames: customer.surnames,
       email: customer.email,
       phone: customer.phone,
     };
@@ -222,15 +231,14 @@ export class CustomerManagementComponent {
 
   saveCustomer() {
     const current = this.editingCustomer();
-    const names = this.form.fullName.trim().split(/\s+/);
     const customer: CustomerDto = {
-      id: current?.id ?? 0,
+      id: current?.id,
       docType: this.form.docType,
       docNumber: this.form.docNumber,
-      names: names.slice(0, Math.max(1, names.length - 1)).join(' '),
-      surnames: names.length > 1 ? names.slice(-1).join(' ') : '',
-      email: this.form.email,
-      phone: this.form.phone,
+      names: this.form.names.trim(),
+      surnames: this.form.surnames.trim(),
+      email: this.form.email.trim(),
+      phone: this.form.phone.trim(),
       address: current?.address,
       monthlyIncome: current?.monthlyIncome ?? 0,
       occupation: current?.occupation ?? '',
@@ -246,10 +254,9 @@ export class CustomerManagementComponent {
 
   confirmDelete() {
     const customer = this.customerToDelete();
-    if (!customer) return;
+    if (!customer?.id) return;
 
     this.customerService.delete(customer.id).subscribe(() => {
-      this.customerService.refresh();
       this.customerToDelete.set(null);
     });
   }
@@ -262,7 +269,8 @@ export class CustomerManagementComponent {
     return {
       docType: 'DNI',
       docNumber: '',
-      fullName: '',
+      names: '',
+      surnames: '',
       email: '',
       phone: '',
     };

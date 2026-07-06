@@ -2,48 +2,50 @@ import { DecimalPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { Simulation } from '../../models';
 import { CustomerDto } from '../../customers/models/dtos/customer.dto';
 import { CustomerService } from '../../customers/services/api/customer.service';
 import { FinancialInstitutionDto } from '../../financial-institutions/models/dtos/financial-institution.dto';
 import { FinancialInstitutionService } from '../../financial-institutions/services/api/financial-institution.service';
-import { SimulationService } from '../../services/simulation.service';
+import { FinancialProductDto } from '../../financial-products/models/dtos/financial-product.dto';
+import { FinancialProductService } from '../../financial-products/services/api/financial-product.service';
+import { GraceType, SimulationRequestDto } from '../../simulations/models/dtos/simulation-request.dto';
+import { SimulationService } from '../../simulations/services/api/simulation.service';
+import { PageContainerComponent } from '../../shared/components/page-container/page-container.component';
 import { VehicleDto } from '../../vehicles/models/dtos/vehicle.dto';
 import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catalog.service';
-
-type GraceType = 'S' | 'P' | 'T';
 
 @Component({
   selector: 'app-simulation',
   standalone: true,
-  imports: [FormsModule, RouterLink, DecimalPipe],
+  imports: [FormsModule, RouterLink, DecimalPipe, PageContainerComponent],
   template: `
+    <app-page-container>
     <section class="simulation-page">
       <div class="crumb">Simulaciones › <strong>Nueva simulación</strong></div>
 
       @if (step() === 1) {
         <header class="step-head">
-          <h1>Paso 1: Cliente, vehículo y entidad</h1>
-          <p>Seleccione el solicitante, registre el vehículo de interés y elija la entidad financiera para iniciar el cálculo.</p>
+          <h1>Paso 1: Cliente, vehículo y producto</h1>
+          <p>Seleccione el solicitante, registre el vehículo de interés y elija el producto financiero para iniciar el cálculo.</p>
         </header>
       }
       @if (step() === 2) {
         <header class="step-head">
           <h1>Paso 2: Condiciones del crédito</h1>
-          <p>Defina el capital financiado, tasa efectiva, plazo y periodo de gracia para calcular el cronograma.</p>
+          <p>Defina la cuota inicial, plazo y periodo de gracia para calcular el cronograma.</p>
         </header>
       }
       @if (step() === 3) {
         <header class="step-head">
-          <h1>Paso 3: Seguros y confirmación</h1>
-          <p>Revise los seguros y cargos asociados al crédito antes de generar el cronograma de pagos.</p>
+          <h1>Paso 3: Compra inteligente y confirmación</h1>
+          <p>Revise las condiciones del producto antes de generar el cronograma de pagos.</p>
         </header>
       }
 
       <div class="stepper">
         <div class="step-item" [class.active]="step() === 1" [class.done]="step() > 1">
           <span>{{ step() > 1 ? '✓' : '01' }}</span>
-          <strong>Cliente, vehículo<br />y entidad</strong>
+          <strong>Cliente, vehículo<br />y producto</strong>
         </div>
         <div class="line" [class.done]="step() > 1"></div>
         <div class="step-item" [class.active]="step() === 2" [class.done]="step() > 2">
@@ -53,7 +55,7 @@ type GraceType = 'S' | 'P' | 'T';
         <div class="line" [class.done]="step() > 2"></div>
         <div class="step-item" [class.active]="step() === 3">
           <span>03</span>
-          <strong>Seguros y<br />confirmación</strong>
+          <strong>Compra inteligente<br />y confirmación</strong>
         </div>
       </div>
 
@@ -64,7 +66,6 @@ type GraceType = 'S' | 'P' | 'T';
               <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-8 0v2"/><circle cx="12" cy="7" r="4"/></svg>
               Información del Cliente
             </h2>
-            <button type="button" class="link-button">Registrar nuevo cliente</button>
           </div>
           <div class="panel">
             <div class="search-row">
@@ -74,7 +75,7 @@ type GraceType = 'S' | 'P' | 'T';
             <table class="mini-table">
               <thead><tr><th>Documento</th><th>Nombre completo</th><th>Acción</th></tr></thead>
               <tbody>
-                @for (client of filteredClients(); track client.id) {
+                @for (client of filteredClients(); track client.id ?? client.docNumber) {
                   <tr>
                     <td>{{ client.docNumber }}</td>
                     <td>{{ client.names }} {{ client.surnames }}</td>
@@ -106,7 +107,7 @@ type GraceType = 'S' | 'P' | 'T';
           </div>
           <div class="panel">
             <label class="label">Seleccionar vehículo</label>
-            <select [(ngModel)]="simulation.vehicleId" (ngModelChange)="onVehicleChange()">
+            <select [(ngModel)]="request.vehicleId" (ngModelChange)="onVehicleChange()">
               <option [ngValue]="0">Buscar por marca, modelo, versión o año...</option>
               @for (vehicle of vehicles(); track vehicle.id) {
                 <option [ngValue]="vehicle.id">{{ vehicle.brand }} {{ vehicle.model }} {{ vehicle.year }}</option>
@@ -128,7 +129,7 @@ type GraceType = 'S' | 'P' | 'T';
                 </div>
                 <div class="amount">
                   <small>Valor referencial</small>
-                  <strong>S/ {{ vehicle.price | number:'1.2-2' }}</strong>
+                  <strong>{{ vehicle.currency }} {{ vehicle.price | number:'1.2-2' }}</strong>
                 </div>
               </div>
             }
@@ -137,30 +138,29 @@ type GraceType = 'S' | 'P' | 'T';
           <div class="section-title spaced">
             <h2>
               <svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V10h14v11"/><path d="M2 10l10-7 10 7"/></svg>
-              Entidad Financiera
+              Producto financiero
             </h2>
           </div>
           <div class="entity-panel">
             <div>
-              <label class="label">Entidad bancaria</label>
-              <select [(ngModel)]="simulation.entityId" (ngModelChange)="onEntityChange()">
-                <option [ngValue]="0">Seleccione entidad</option>
-                @for (entity of entities(); track entity.id) {
-                  <option [ngValue]="entity.id">{{ entity.shortName || entity.name }}</option>
+              <label class="label">Producto financiero</label>
+              <select [(ngModel)]="request.financialProductId" (ngModelChange)="onProductChange()">
+                <option [ngValue]="0">Seleccione producto</option>
+                @for (product of products(); track product.id) {
+                  <option [ngValue]="product.id">{{ institutionName(product.financialInstitutionId) }} — {{ product.productName }}</option>
                 }
               </select>
-              <div class="warning">△ Las condiciones se toman de la matriz de entidades financieras y pueden variar según evaluación crediticia.</div>
+              <div class="warning">△ Las condiciones se toman del producto financiero vigente y pueden variar según evaluación crediticia.</div>
             </div>
-            @if (selectedEntity(); as entity) {
+            @if (selectedProduct(); as product) {
               <aside class="conditions">
-                <h4>Condiciones referenciales (lectura)</h4>
+                <h4>Condiciones del producto (lectura)</h4>
                 <dl>
-                  <dt>TEA publicada:</dt><dd>Según rango de capital</dd>
-                  <dt>Inicial mínima:</dt><dd>{{ displayInitial(entity) }}</dd>
-                  <dt>Financiamiento máx:</dt><dd>{{ displayFinancing(entity) }}</dd>
-                  <dt>Plazo permitido:</dt><dd>{{ displayTerm(entity) }}</dd>
-                  <dt>Gracia permitida:</dt><dd>{{ displayGrace(entity) }}</dd>
-                  <dt>Seguros referenciales:</dt><dd>Incluidos</dd>
+                  <dt>TEA:</dt><dd>{{ product.teaPercent | number:'1.2-2' }}%</dd>
+                  <dt>Inicial mínima:</dt><dd>{{ product.minDownPaymentPercent | number:'1.0-0' }}%</dd>
+                  <dt>Financiamiento máx:</dt><dd>{{ product.maxDownPaymentPercent | number:'1.0-0' }}%</dd>
+                  <dt>Plazo permitido:</dt><dd>{{ product.minTermMonths }} - {{ product.maxTermMonths }} meses</dd>
+                  <dt>Compra inteligente:</dt><dd>{{ product.balloonAllowed ? ('Hasta ' + product.maxBalloonPercent + '%') : 'No permitida' }}</dd>
                 </dl>
               </aside>
             }
@@ -179,62 +179,61 @@ type GraceType = 'S' | 'P' | 'T';
             <h2><span>$</span> Capital del crédito</h2>
             <div class="form-grid">
               <label>
-                <span>Valor del vehículo (S/) ⓘ</span>
-                <input type="number" [(ngModel)]="simulation.vehiclePrice" (ngModelChange)="recalculateDownPayment()" />
+                <span>Valor del vehículo ⓘ</span>
+                <input type="number" [(ngModel)]="vehiclePrice" (ngModelChange)="recalculateDownPayment()" />
               </label>
               <label>
-                <span>Cuota inicial (S/) ⓘ</span>
-                <input type="number" [(ngModel)]="simulation.downPayment" (ngModelChange)="syncDownPaymentPercent()" />
+                <span>Cuota inicial (%) ⓘ</span>
+                <input type="number" [(ngModel)]="request.downPaymentPercent" (ngModelChange)="recalculateDownPayment()" />
               </label>
-            </div>
-            <div class="toggle-row">
-              <span>¿Incluye cuota inicial?</span>
-              <label class="switch"><input type="checkbox" [(ngModel)]="hasDownPayment" (ngModelChange)="toggleDownPayment()" /><i></i></label>
             </div>
           </article>
 
           <article class="form-card">
-            <h2><span>▦</span> Tasa y plazo</h2>
+            <h2><span>▦</span> Plazo y desembolso</h2>
             <div class="form-grid">
-              <label><span>Entidad financiera</span><input [value]="entityLabel()" disabled /></label>
-              <label><span>TEA aplicada (%) ⓘ</span><input type="number" step="0.01" [(ngModel)]="simulation.tea" /></label>
-              <label><span>Plazo del crédito (meses) ⓘ</span><input type="number" [(ngModel)]="simulation.term" /></label>
-              <label><span>Fecha de inicio ⓘ</span><input type="date" [(ngModel)]="simulation.disbursementDate" /></label>
+              <label><span>Producto financiero</span><input [value]="productLabel()" disabled /></label>
+              <label><span>TEA del producto (%)</span><input [value]="(selectedProduct()?.teaPercent | number:'1.2-2') || '-'" disabled /></label>
+              <label><span>Plazo del crédito (meses) ⓘ</span><input type="number" [(ngModel)]="request.termMonths" /></label>
+              <label><span>Fecha de primer pago ⓘ</span><input type="date" [(ngModel)]="request.firstPaymentDate" /></label>
+              <label><span>Día de pago (1-28) ⓘ</span><input type="number" min="1" max="28" [(ngModel)]="request.paymentDay" /></label>
             </div>
+          </article>
+
+          <article class="form-card cok-card">
+            <h2><span>◇</span> Costo de oportunidad (COK)</h2>
+            <div class="form-grid">
+              <label>
+                <span>COK (%) ⓘ</span>
+                <input type="number" min="0" step="0.0001" [(ngModel)]="request.cokTeaPercent" (ngModelChange)="validateCok()" />
+              </label>
+              <label>
+                <span>COK mensual (%)</span>
+                <input [value]="cokMonthlyPercent() | number:'1.4-4'" disabled />
+              </label>
+            </div>
+            <p class="note">El COK debe ser mayor o igual a la TEA del producto. Para el VAN se usa (1 + COK)^(1/12) - 1.</p>
+            @if (cokError()) {
+              <p class="error">{{ cokError() }}</p>
+            }
           </article>
 
           <article class="form-card">
             <h2><span>⌛</span> Periodo de gracia</h2>
             <div class="grace-grid">
-              <button type="button" [class.selected]="graceType() === 'S'" (click)="setGrace('S')"><strong>Sin gracia</strong><small>Sin diferimiento</small></button>
-              <button type="button" [class.selected]="graceType() === 'P'" (click)="setGrace('P')"><strong>Gracia parcial</strong><small>Solo intereses</small></button>
-              <button type="button" [class.selected]="graceType() === 'T'" (click)="setGrace('T')"><strong>Gracia total</strong><small>Difiere todo</small></button>
+              <button type="button" [class.selected]="request.graceType === 'NONE'" (click)="setGrace('NONE')"><strong>Sin gracia</strong><small>Sin diferimiento</small></button>
+              <button type="button" [class.selected]="request.graceType === 'PARTIAL'" (click)="setGrace('PARTIAL')"><strong>Gracia parcial</strong><small>Solo intereses</small></button>
+              <button type="button" [class.selected]="request.graceType === 'TOTAL'" (click)="setGrace('TOTAL')"><strong>Gracia total</strong><small>Difiere todo</small></button>
             </div>
             <label class="full">
               <span>Duración de gracia (meses) ⓘ</span>
-              <input type="number" min="0" max="6" [(ngModel)]="simulation.graceMonths" [disabled]="graceType() === 'S'" />
+              <input type="number" min="0" max="6" [(ngModel)]="request.graceMonths" [disabled]="request.graceType === 'NONE'" />
             </label>
-          </article>
-
-          <article class="form-card">
-            <h2><span>✪</span> Compra Inteligente <small>Permite definir una cuota final mayor al cierre del crédito para reducir la cuota mensual.</small></h2>
-            <div class="balloon-row">
-              <div><strong>¿Aplicar Compra Inteligente?</strong><p>Activa esta opción si la entidad financiera permite una cuota final o monto balón.</p></div>
-              <label class="switch"><input type="checkbox" [(ngModel)]="simulation.balloonEnabled" (ngModelChange)="validateBalloon()" /><i></i></label>
-            </div>
-            <label class="full">
-              <span>Monto de cuota final / balón (S/) ⓘ</span>
-              <input type="number" [(ngModel)]="simulation.balloonAmount" [disabled]="!simulation.balloonEnabled" />
-            </label>
-            <p class="note">ⓘ Nota: La cuota final no reemplaza las cuotas mensuales. Se considera como un pago residual al final del préstamo.</p>
-            @if (balloonError()) {
-              <p class="error">{{ balloonError() }}</p>
-            }
           </article>
         </section>
         <div class="actions-row">
           <button type="button" class="ghost" (click)="step.set(1)">← Atrás</button>
-          <button type="button" class="primary wide" (click)="goStep3()">Siguiente paso: Costos y confirmación →</button>
+          <button type="button" class="primary wide" (click)="goStep3()">Siguiente paso: Compra inteligente →</button>
         </div>
       }
 
@@ -242,21 +241,38 @@ type GraceType = 'S' | 'P' | 'T';
         <section class="confirm-layout">
           <div>
             <article class="form-card">
-              <h2><span>◈</span> Seguros y cargos del crédito</h2>
-              <div class="cost-row">
-                <label><input type="checkbox" checked /> <strong>Seguro de desgravamen</strong><small>Protección obligatoria sobre deuda.</small></label>
-                <strong>{{ simulation.insuranceDisbursement | number:'1.3-3' }}%</strong>
+              <h2><span>✪</span> Compra Inteligente <small>Permite definir una cuota final mayor al cierre del crédito para reducir la cuota mensual.</small></h2>
+              <div class="balloon-row">
+                <div><strong>¿Aplicar Compra Inteligente?</strong><p>Disponible solo si el producto financiero lo permite.</p></div>
+                <label class="switch"><input type="checkbox" [(ngModel)]="balloonEnabled" [disabled]="!selectedProduct()?.balloonAllowed" (ngModelChange)="validateBalloon()" /><i></i></label>
               </div>
-              <div class="cost-row">
-                <label><input type="checkbox" checked /> <strong>Seguro vehicular</strong><small>Cobertura integral del vehículo.</small></label>
-                <strong>S/ {{ vehicleInsuranceMonthly() | number:'1.2-2' }} mensual</strong>
-              </div>
-              <div class="cost-row">
-                <label><input type="checkbox" checked /> <strong>Portes</strong><small>Cargos de envío y administrativos.</small></label>
-                <strong>S/ {{ effectivePortes() | number:'1.2-2' }}</strong>
-              </div>
+              <label class="full">
+                <span>Cuota final / balón (% del valor del vehículo) ⓘ</span>
+                <input type="number" [(ngModel)]="request.balloonPercent" [disabled]="!balloonEnabled" (ngModelChange)="validateBalloon()" />
+              </label>
+              <p class="note">ⓘ Nota: La cuota final no reemplaza las cuotas mensuales. Se considera como un pago residual al final del préstamo.</p>
+              @if (balloonError()) {
+                <p class="error">{{ balloonError() }}</p>
+              }
             </article>
-            <p class="legal">Los seguros y portes mostrados corresponden a las condiciones referenciales de la entidad financiera seleccionada.</p>
+
+            <article class="form-card">
+              <h2><span>◈</span> Seguros y cargos referenciales del producto</h2>
+              @if (selectedProduct(); as product) {
+                <div class="cost-row">
+                  <label><strong>Seguro de desgravamen</strong><small>Protección obligatoria sobre deuda.</small></label>
+                  <strong>{{ product.creditLifeInsuranceMonthlyPercent | number:'1.3-3' }}% mensual</strong>
+                </div>
+                <div class="cost-row">
+                  <label><strong>Seguro vehicular</strong><small>Cobertura integral del vehículo.</small></label>
+                  <div class="cost-value">
+                    <strong>{{ product.vehicleInsuranceAnnualPercent | number:'1.2-2' }}% anual</strong>
+                    <small>{{ vehicleInsuranceMonthlyPercent() | number:'1.4-4' }}% mensual</small>
+                  </div>
+                </div>
+              }
+            </article>
+            <p class="legal">Los seguros y cargos mostrados corresponden a las condiciones vigentes del producto financiero seleccionado.</p>
           </div>
 
           <aside class="summary-card">
@@ -264,30 +280,33 @@ type GraceType = 'S' | 'P' | 'T';
             <dl class="summary-main">
               <dt>Cliente</dt><dd>{{ selectedClientName() }}</dd>
               <dt>Vehículo</dt><dd>{{ selectedVehicleName() }}</dd>
-              <dt>Entidad financiera</dt><dd>{{ entityLabel() }}</dd>
+              <dt>Producto financiero</dt><dd>{{ productLabel() }}</dd>
             </dl>
             <dl class="summary-money">
-              <dt>Valor del vehículo</dt><dd>S/ {{ simulation.vehiclePrice | number:'1.2-2' }}</dd>
-              <dt>Cuota inicial</dt><dd>S/ {{ simulation.downPayment | number:'1.2-2' }}</dd>
-              <dt>Capital financiado</dt><dd>S/ {{ financedAmount() | number:'1.2-2' }}</dd>
+              <dt>Valor del vehículo</dt><dd>{{ vehiclePrice | number:'1.2-2' }}</dd>
+              <dt>Cuota inicial</dt><dd>{{ downPaymentAmount() | number:'1.2-2' }} ({{ request.downPaymentPercent | number:'1.0-0' }}%)</dd>
+              <dt>Capital financiado (estimado)</dt><dd>{{ financedAmount() | number:'1.2-2' }}</dd>
             </dl>
             <div class="summary-columns">
-              <div><small>Tasas</small><strong>TEA: {{ simulation.tea | number:'1.2-2' }}%</strong></div>
-              <div><small>Plazo y gracia</small><strong>Plazo: {{ simulation.term }} meses</strong><strong>Gracia: {{ simulation.graceMonths }}m</strong></div>
-              <div><small>Detalle cuota</small><strong>Cuota balón: S/ {{ simulation.balloonAmount || 0 | number:'1.2-2' }}</strong></div>
-              <div><small>Otros cargos</small><strong>Desgravamen: {{ simulation.insuranceDisbursement | number:'1.3-3' }}%</strong><strong>Seg. Vehicular: S/ {{ vehicleInsuranceMonthly() | number:'1.2-2' }}</strong><strong>Portes: S/ {{ effectivePortes() | number:'1.2-2' }}</strong></div>
+              <div><small>Tasas</small><strong>TEA: {{ (selectedProduct()?.teaPercent | number:'1.2-2') || '-' }}%</strong></div>
+              <div><small>COK</small><strong>COK: {{ request.cokTeaPercent | number:'1.2-2' }}%</strong><strong>Mensual: {{ cokMonthlyPercent() | number:'1.4-4' }}%</strong></div>
+              <div><small>Plazo y gracia</small><strong>Plazo: {{ request.termMonths }} meses</strong><strong>Gracia: {{ request.graceMonths }}m</strong></div>
+              <div><small>Compra inteligente</small><strong>Balón: {{ balloonEnabled ? (request.balloonPercent + '%') : 'No aplica' }}</strong></div>
             </div>
           </aside>
         </section>
         <div class="actions-row">
           <button type="button" class="ghost" (click)="step.set(2)">← Atrás</button>
-          <button type="button" class="primary wide" (click)="calculate()">Calcular simulación ▣</button>
+          <button type="button" class="primary wide" [disabled]="calculating()" (click)="calculate()">Calcular simulación ▣</button>
         </div>
+        @if (submitError()) {
+          <p class="error">{{ submitError() }}</p>
+        }
       }
     </section>
+    </app-page-container>
   `,
   styles: [`
-    .simulation-page { max-width:1060px; margin:0 auto; }
     .crumb { margin:-18px 0 28px; color:#8aa0bf; font-size:13px; }
     .crumb strong { color:#111827; }
     .step-head h1 { color:#00318f; font-size:32px; line-height:1; letter-spacing:-.03em; margin:0 0 10px; font-weight:900; }
@@ -354,9 +373,10 @@ type GraceType = 'S' | 'P' | 'T';
     .error { margin:0 26px 20px; color:#c01818; font-weight:800; }
     .confirm-layout { display:grid; grid-template-columns:1fr 300px; gap:34px; align-items:start; }
     .cost-row { display:flex; justify-content:space-between; align-items:center; margin:24px 26px; padding:16px; background:#f8fafc; border-radius:4px; }
-    .cost-row label { display:flex; align-items:flex-start; gap:12px; margin:0; color:#111827; }
-    .cost-row input { width:auto; min-height:auto; accent-color:#0036a3; }
+    .cost-row label { display:flex; flex-direction:column; align-items:flex-start; gap:2px; margin:0; color:#111827; }
     .cost-row strong:last-child { color:#0036a3; }
+    .cost-value { display:flex; flex-direction:column; align-items:flex-end; gap:3px; color:#0036a3; }
+    .cost-value small { color:#475569; font-weight:700; }
     .legal { margin:20px 8px 0; color:#4b5563; font-style:italic; line-height:1.5; }
     .summary-card { background:#121d31; color:#fff; border-radius:7px; overflow:hidden; box-shadow:0 12px 24px rgba(15,23,42,.18); }
     .summary-card h3 { margin:0; padding:22px; background:#1b263a; font-size:17px; }
@@ -373,6 +393,7 @@ type GraceType = 'S' | 'P' | 'T';
     .ghost, .primary { min-height:48px; border-radius:4px; padding:0 28px; font-weight:900; cursor:pointer; }
     .ghost { border:1px solid #d9e1ee; background:#fff; color:#374151; }
     .primary { border:0; background:#0036a3; color:#fff; box-shadow:0 6px 14px rgba(0,54,163,.18); }
+    .primary:disabled { opacity:.6; cursor:not-allowed; }
     .wide { min-width:360px; }
     @media (max-width: 920px) {
       .stepper, .entity-panel, .confirm-layout, .form-grid, .grace-grid, .vehicle-picked { grid-template-columns:1fr; }
@@ -386,50 +407,39 @@ export class SimulationComponent {
   private router = inject(Router);
   private clientSvc = inject(CustomerService);
   private vehicleSvc = inject(VehicleCatalogService);
-  private entitySvc = inject(FinancialInstitutionService);
+  private institutionSvc = inject(FinancialInstitutionService);
+  private productSvc = inject(FinancialProductService);
   private simSvc = inject(SimulationService);
 
   step = signal(1);
   clientQuery = '';
-  hasDownPayment = true;
+  balloonEnabled = false;
   balloonError = signal('');
+  cokError = signal('');
+  submitError = signal('');
   calculating = signal(false);
-  graceType = signal<GraceType>('S');
   selectedClient = signal<CustomerDto | undefined>(undefined);
   selectedVehicle = signal<VehicleDto | undefined>(undefined);
-  selectedEntity = signal<FinancialInstitutionDto | undefined>(undefined);
+  selectedProduct = signal<FinancialProductDto | undefined>(undefined);
 
   clients = this.clientSvc.customers;
   vehicles = this.vehicleSvc.vehicles;
-  entities = this.entitySvc.institutions;
+  products = this.productSvc.products;
 
-  simulation: Simulation = {
-    id: 0,
-    code: '',
+  vehiclePrice = 0;
+
+  request: SimulationRequestDto = {
     clientId: 0,
     vehicleId: 0,
-    entityId: 0,
-    currency: 'PEN',
-    vehiclePrice: 85000,
-    downPayment: 17000,
+    financialProductId: 0,
     downPaymentPercent: 20,
-    financedAmount: 68000,
-    term: 15,
-    tea: 12.5,
-    paymentDay: 24,
-    disbursementDate: '2023-11-24',
-    graceType: 'S',
+    termMonths: 36,
+    cokTeaPercent: 0,
+    firstPaymentDate: '',
+    paymentDay: 5,
+    graceType: 'NONE',
     graceMonths: 0,
-    balloonEnabled: true,
-    balloonAmount: 15000,
-    insuranceDisbursement: 0.05,
-    insuranceVehicle: 1.1294,
-    monthlyFee: 10,
-    adminCost: 0,
-    notaryCost: 0,
-    otherCharges: 0,
-    status: 'Borrador',
-    createdAt: '',
+    balloonPercent: 0,
   };
 
   filteredClients = computed(() => {
@@ -437,164 +447,151 @@ export class SimulationComponent {
     const rows = this.clients().filter((client) => !query
       || client.docNumber.toLowerCase().includes(query)
       || `${client.names} ${client.surnames}`.toLowerCase().includes(query));
-    return rows.slice(0, 1);
+    return rows.slice(0, 5);
   });
 
   selectClient(client: CustomerDto) {
+    if (!client.id) return;
+
     this.selectedClient.set(client);
-    this.simulation.clientId = client.id;
+    this.request.clientId = client.id;
   }
 
   onVehicleChange() {
-    const vehicle = this.vehicleSvc.getById(Number(this.simulation.vehicleId));
+    const vehicle = this.vehicleSvc.getById(Number(this.request.vehicleId));
     this.selectedVehicle.set(vehicle);
     if (vehicle) {
-      this.simulation.vehiclePrice = vehicle.price;
+      this.vehiclePrice = vehicle.price;
       this.recalculateDownPayment();
     }
   }
 
-  onEntityChange() {
-    const entity = this.entitySvc.getById(Number(this.simulation.entityId));
-    this.selectedEntity.set(entity);
-    if (entity) {
-      this.simulation.tea = entity.tea;
-      this.simulation.insuranceDisbursement = entity.insuranceDisbursement || 0.05;
-      this.simulation.insuranceVehicle = entity.insuranceVehicle || 1.1294;
-      this.simulation.monthlyFee = this.isBcp() ? 0 : (entity.monthlyFee || 10);
+  onProductChange() {
+    const product = this.productSvc.getById(Number(this.request.financialProductId));
+    this.selectedProduct.set(product);
+    if (product) {
+      this.request.termMonths = Math.min(Math.max(this.request.termMonths, product.minTermMonths), product.maxTermMonths);
+      this.request.downPaymentPercent = Math.min(Math.max(this.request.downPaymentPercent, product.minDownPaymentPercent), product.maxDownPaymentPercent);
+      if (!this.request.cokTeaPercent || this.request.cokTeaPercent < product.teaPercent) {
+        this.request.cokTeaPercent = product.teaPercent;
+      }
+      if (!product.balloonAllowed) {
+        this.balloonEnabled = false;
+        this.request.balloonPercent = 0;
+      }
+      this.validateCok();
     }
+  }
+
+  institutionName(institutionId: number) {
+    const institution: FinancialInstitutionDto | undefined = this.institutionSvc.getById(institutionId);
+    return institution?.shortName || institution?.name || 'Entidad';
   }
 
   goStep2() {
     if (!this.selectedClient() && this.clients()[0]) this.selectClient(this.clients()[0]);
     if (!this.selectedVehicle() && this.vehicles()[0]) {
-      this.simulation.vehicleId = this.vehicles()[0].id;
+      this.request.vehicleId = this.vehicles()[0].id;
       this.onVehicleChange();
     }
-    if (!this.selectedEntity() && this.entities()[0]) {
-      this.simulation.entityId = this.entities()[0].id;
-      this.onEntityChange();
+    if (!this.selectedProduct() && this.products()[0]) {
+      this.request.financialProductId = this.products()[0].id;
+      this.onProductChange();
     }
     this.step.set(2);
   }
 
   goStep3() {
-    this.syncDownPaymentPercent();
-    if (this.validateBalloon()) this.step.set(3);
+    if (!this.validateCok()) return;
+    this.step.set(3);
   }
 
   setGrace(type: GraceType) {
-    this.graceType.set(type);
-    this.simulation.graceType = type;
-    this.simulation.graceMonths = type === 'S' ? 0 : Math.max(1, this.simulation.graceMonths || 1);
-  }
-
-  toggleDownPayment() {
-    if (!this.hasDownPayment) {
-      this.simulation.downPayment = 0;
-      this.simulation.downPaymentPercent = 0;
-    } else {
-      this.recalculateDownPayment();
-    }
+    this.request.graceType = type;
+    this.request.graceMonths = type === 'NONE' ? 0 : Math.max(1, this.request.graceMonths || 1);
   }
 
   recalculateDownPayment() {
-    this.simulation.downPayment = Math.round((this.simulation.vehiclePrice * (this.simulation.downPaymentPercent || 20) / 100) * 100) / 100;
-    this.simulation.financedAmount = this.financedAmount();
+    // downPaymentPercent is the source of truth sent to the backend; nothing else to sync here.
   }
 
-  syncDownPaymentPercent() {
-    this.simulation.downPaymentPercent = this.simulation.vehiclePrice > 0
-      ? Math.round((this.simulation.downPayment / this.simulation.vehiclePrice) * 10000000) / 100000
-      : 0;
-    this.simulation.financedAmount = this.financedAmount();
+  downPaymentAmount() {
+    return Math.round((this.vehiclePrice * (this.request.downPaymentPercent || 0) / 100) * 100) / 100;
+  }
+
+  financedAmount() {
+    return Math.max(0, this.vehiclePrice - this.downPaymentAmount());
+  }
+
+  vehicleInsuranceMonthlyPercent() {
+    const annualRate = Number(this.selectedProduct()?.vehicleInsuranceAnnualPercent) || 0;
+    return Math.round((annualRate / 12) * 10000) / 10000;
   }
 
   validateBalloon() {
-    if (this.simulation.balloonEnabled && this.simulation.term > 36) {
-      this.balloonError.set('La compra inteligente con cuota balón permite un plazo máximo de 36 meses.');
+    const product = this.selectedProduct();
+    if (this.balloonEnabled && product && this.request.balloonPercent > product.maxBalloonPercent) {
+      this.balloonError.set(`La compra inteligente de este producto permite hasta ${product.maxBalloonPercent}% del valor del vehículo.`);
       return false;
     }
     this.balloonError.set('');
     return true;
   }
 
+  validateCok() {
+    const product = this.selectedProduct();
+    if (!product) {
+      this.cokError.set('');
+      return true;
+    }
+    const value = Number(this.request.cokTeaPercent);
+    if (!Number.isFinite(value)) {
+      this.cokError.set('Ingresa el COK como porcentaje.');
+      return false;
+    }
+    if (value < product.teaPercent) {
+      this.cokError.set(`El COK no puede ser menor a la TEA del producto (${product.teaPercent.toFixed(2)}%).`);
+      return false;
+    }
+    this.cokError.set('');
+    return true;
+  }
+
+  cokMonthlyPercent() {
+    const cok = (Number(this.request.cokTeaPercent) || 0) / 100;
+    return Math.round((Math.pow(1 + cok, 1 / 12) - 1) * 1000000) / 10000;
+  }
+
   calculate() {
-    if (this.calculating() || !this.validateBalloon()) return;
+    if (this.calculating() || !this.validateBalloon() || !this.validateCok()) return;
+    this.submitError.set('');
     this.calculating.set(true);
-    this.syncDownPaymentPercent();
-    this.simulation.financedAmount = this.financedAmount();
-    this.simulation.monthlyFee = this.effectivePortes();
-    this.simSvc.save(this.simulation).subscribe((saved) => {
-      this.simulation.id = saved.id;
-      this.simSvc.calculate(saved.id).subscribe({
-        next: (result) => {
-          this.router.navigate(['/results', saved.id], { state: { result } });
-        },
-        error: () => this.calculating.set(false),
-      });
-    }, () => {
-      this.calculating.set(false);
+    this.request.vehiclePrice = this.vehiclePrice;
+    this.request.balloonPercent = this.balloonEnabled ? this.request.balloonPercent : 0;
+
+    this.simSvc.create(this.request).subscribe({
+      next: (simulation) => {
+        this.router.navigate(['/results', simulation.id], { state: { result: simulation } });
+      },
+      error: (err) => {
+        this.submitError.set(err?.error?.detail ?? 'No se pudo calcular la simulación.');
+        this.calculating.set(false);
+      },
     });
-  }
-
-  financedAmount() {
-    return Math.max(0, this.simulation.vehiclePrice - this.simulation.downPayment);
-  }
-
-  vehicleInsuranceMonthly() {
-    return (this.simulation.vehiclePrice * (this.simulation.insuranceVehicle / 100)) / 12;
-  }
-
-  effectivePortes() {
-    return this.isBcp() ? 0 : (this.simulation.monthlyFee || 0);
   }
 
   selectedClientName() {
     const client = this.selectedClient();
-    return client ? `${client.names} ${client.surnames}` : 'Roberto Gómez Valdez';
+    return client ? `${client.names} ${client.surnames}` : '—';
   }
 
   selectedVehicleName() {
     const vehicle = this.selectedVehicle();
-    return vehicle ? `${vehicle.brand} ${vehicle.model} ${vehicle.year}` : 'Toyota Corolla 2024';
+    return vehicle ? `${vehicle.brand} ${vehicle.model} ${vehicle.year}` : '—';
   }
 
-  entityLabel() {
-    const entity = this.selectedEntity();
-    return entity?.shortName || entity?.name || 'BCP';
-  }
-
-  displayInitial(entity: FinancialInstitutionDto) {
-    return entity.minDownPayment === null || entity.minDownPayment === undefined
-      ? entity.minimumInitialLabel
-      : `${this.formatPercent(entity.minDownPayment)}%`;
-  }
-
-  displayFinancing(entity: FinancialInstitutionDto) {
-    return entity.maxFinancing === null || entity.maxFinancing === undefined
-      ? entity.maximumFinancingLabel
-      : `${this.formatPercent(entity.maxFinancing)}%`;
-  }
-
-  displayTerm(entity: FinancialInstitutionDto) {
-    if (entity.minTerm && entity.maxTerm) return `${entity.minTerm} - ${entity.maxTerm} meses`;
-    if (entity.maxTerm) return `Hasta ${entity.maxTerm} meses`;
-    return entity.termLabel || 'No publicado';
-  }
-
-  displayGrace(entity: FinancialInstitutionDto) {
-    return entity.graceLabel && entity.graceLabel !== 'No publicado'
-      ? entity.graceLabel
-      : 'No publicado';
-  }
-
-  private formatPercent(value: number) {
-    return value.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-
-  private isBcp() {
-    const entity = this.selectedEntity();
-    return !!entity && ((entity.code || '').toUpperCase() === 'BCP' || (entity.shortName || '').toUpperCase().includes('BCP'));
+  productLabel() {
+    const product = this.selectedProduct();
+    return product ? `${this.institutionName(product.financialInstitutionId)} — ${product.productName}` : '—';
   }
 }

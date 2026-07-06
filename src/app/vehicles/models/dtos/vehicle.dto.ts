@@ -1,5 +1,6 @@
 export interface VehicleDto {
   id: number;
+  code: string;
   brand: string;
   model: string;
   year: number;

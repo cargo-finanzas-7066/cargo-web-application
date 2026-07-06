@@ -129,7 +129,7 @@ export class RegisterComponent {
         this.router.navigate(['/login'], { queryParams: { registered: response.user.email } });
       },
       error: (err) => {
-        this.error = err?.error?.message ?? 'No se pudo crear la cuenta institucional.';
+        this.error = err?.error?.detail ?? 'No se pudo crear la cuenta institucional.';
         this.loading = false;
       },
     });

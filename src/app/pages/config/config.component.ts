@@ -1,10 +1,13 @@
 import { Component } from '@angular/core';
+import { PageContainerComponent } from '../../shared/components/page-container/page-container.component';
 
 @Component({
   selector: 'app-config',
   standalone: true,
+  imports: [PageContainerComponent],
   template: `
-    <div class="page-header"><div><h1>Configuración</h1><p>Parámetros generales del sistema</p></div></div>
+    <app-page-container>
+    <div class="page-header"><div><h1>Configuración</h1></div></div>
     <div class="card" style="max-width:600px">
       <div class="grid-2">
         <div class="form-group">
@@ -42,6 +45,7 @@ import { Component } from '@angular/core';
       </div>
       <p style="margin-top:16px;font-size:12px;color:var(--text-muted)">Estos parámetros están definidos por la configuración del sistema CarGo.</p>
     </div>
+    </app-page-container>
   `
 })
 export class ConfigComponent {}

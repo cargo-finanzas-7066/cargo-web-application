@@ -32,7 +32,7 @@ import { AuthService } from '../iam/services/api/auth.service';
         <header class="topbar">
           <span class="breadcrumb">{{ topbarTitle() }}</span>
           <div class="topbar-right">
-            <span class="user-name">{{ auth.currentUser()?.name || 'Mery Espinoza' }}</span>
+            <span class="user-name">{{ auth.currentUser()?.name || 'Usuario' }}</span>
             <span class="avatar"></span>
             <button class="logout-button" (click)="auth.logout()" title="Cerrar sesión">
               <svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M21 19V5"/></svg>

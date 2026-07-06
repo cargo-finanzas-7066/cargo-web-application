@@ -1,18 +1,21 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
-import { VehicleService } from '../../services/vehicle.service';
-import { Vehicle } from '../../models';
+import { PageContainerComponent } from '../../shared/components/page-container/page-container.component';
+import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catalog.service';
+import { VehicleDto } from '../../vehicles/models/dtos/vehicle.dto';
 
 @Component({
   selector: 'app-vehicle-form',
   standalone: true,
-  imports: [FormsModule, RouterModule],
+  imports: [FormsModule, RouterModule, PageContainerComponent],
   template: `
+    <app-page-container>
     <div class="page-header"><div><h1>{{ isNew ? 'Nuevo' : 'Editar' }} vehículo</h1></div></div>
     <div class="card" style="max-width:640px">
       <form (ngSubmit)="save()">
         <div class="grid-2">
+          <div class="form-group"><label>Código</label><input class="form-control" [(ngModel)]="vehicle.code" name="code" required></div>
           <div class="form-group"><label>Marca</label><input class="form-control" [(ngModel)]="vehicle.brand" name="brand" required></div>
           <div class="form-group"><label>Modelo</label><input class="form-control" [(ngModel)]="vehicle.model" name="model" required></div>
           <div class="form-group"><label>Año</label><input type="number" class="form-control" [(ngModel)]="vehicle.year" name="year" required></div>
@@ -22,7 +25,13 @@ import { Vehicle } from '../../models';
               <option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta</option>
             </select>
           </div>
-          <div class="form-group"><label>Precio de venta (PEN)</label><input type="number" class="form-control" [(ngModel)]="vehicle.price" name="price" required></div>
+          <div class="form-group"><label>Precio de venta</label><input type="number" class="form-control" [(ngModel)]="vehicle.price" name="price" required></div>
+          <div class="form-group">
+            <label>Moneda</label>
+            <select class="form-control" [(ngModel)]="vehicle.currency" name="currency">
+              <option value="PEN">PEN</option><option value="USD">USD</option>
+            </select>
+          </div>
           <div class="form-group"><label>Concesionario / Empresa</label><input class="form-control" [(ngModel)]="vehicle.dealer" name="dealer"></div>
           <div class="form-group">
             <label>Estado</label>
@@ -38,14 +47,15 @@ import { Vehicle } from '../../models';
         </div>
       </form>
     </div>
+    </app-page-container>
   `
 })
 export class VehicleFormComponent {
-  svc = inject(VehicleService);
+  svc = inject(VehicleCatalogService);
   router = inject(Router);
   route = inject(ActivatedRoute);
   isNew = true;
-  vehicle: Vehicle = { id: 0, brand: '', model: '', year: 2025, category: 'Media', price: 0, currency: 'PEN', dealer: '', status: 'Disponible' };
+  vehicle: VehicleDto = { id: 0, code: '', brand: '', model: '', year: 2025, category: 'Media', price: 0, currency: 'PEN', dealer: '', status: 'Disponible' };
 
   constructor() {
     const id = this.route.snapshot.params['id'];

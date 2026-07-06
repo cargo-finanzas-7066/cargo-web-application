@@ -1,5 +1,5 @@
 export interface CustomerDto {
-  id: number;
+  id?: number;
   docType: string;
   docNumber: string;
   names: string;

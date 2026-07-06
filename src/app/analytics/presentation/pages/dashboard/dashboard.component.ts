@@ -1,19 +1,21 @@
 import { CurrencyPipe, DecimalPipe } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../../../../iam/services/api/auth.service';
+import { PageContainerComponent } from '../../../../shared/components/page-container/page-container.component';
 import { AnalyticsService } from '../../../services/api/analytics.service';
 import { DashboardResponseDto } from '../../../models/dtos/dashboard-response.dto';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CurrencyPipe, DecimalPipe, RouterLink],
+  imports: [CurrencyPipe, DecimalPipe, RouterLink, PageContainerComponent],
   template: `
+    <app-page-container>
     <section class="dashboard-page">
-      <header class="page-title">
-        <h1>Hola, {{ firstName }}</h1>
-        <p>Bienvenida al panel de control institucional. Revisa el estado general de las simulaciones vehiculares.</p>
-      </header>
+      <div class="page-header">
+        <div><h1>Hola, {{ firstName() }}</h1></div>
+      </div>
 
       <div class="stats-grid">
         <article class="stat-card">
@@ -81,12 +83,9 @@ import { DashboardResponseDto } from '../../../models/dtos/dashboard-response.dt
         </div>
       </section>
     </section>
+    </app-page-container>
   `,
   styles: [`
-    .dashboard-page { max-width: 980px; }
-    .page-title { margin-bottom: 24px; }
-    .page-title h1 { font-size: 32px; line-height: 1.1; margin-bottom: 8px; color: #111827; }
-    .page-title p { color: #6b7280; font-size: 16px; }
     .stats-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-bottom: 24px; }
     .stat-card { position: relative; min-height: 150px; padding: 28px; border: 1px solid #d9e0ea; border-radius: 8px; background: #fff; box-shadow: 0 1px 2px rgba(15,23,42,.03); }
     .stat-icon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 5px; font-weight: 800; margin-bottom: 18px; }
@@ -122,7 +121,8 @@ import { DashboardResponseDto } from '../../../models/dtos/dashboard-response.dt
 })
 export class DashboardComponent {
   private analyticsService = inject(AnalyticsService);
-  firstName = 'Mery';
+  private auth = inject(AuthService);
+  firstName = computed(() => this.auth.currentUser()?.name?.split(' ')[0] || 'Usuario');
   fallbackImage = 'https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=900&q=80';
   dashboard = signal<DashboardResponseDto>({
     totalSimulations: 0,
