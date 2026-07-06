@@ -25,14 +25,15 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
 
         <section class="metrics">
           <article class="metric featured"><small>Cuota mensual</small><strong><span class="cur">{{ r.currency }}</span>{{ r.monthlyPayment | number:'1.2-2' }}</strong></article>
+          <article class="metric featured"><small>Cuota final mensual</small><strong><span class="cur">{{ r.currency }}</span>{{ regularFinalPayment() | number:'1.2-2' }}</strong></article>
           <article class="metric"><small>Capital financiado</small><strong><span class="cur">{{ r.currency }}</span>{{ r.financedAmount | number:'1.2-2' }}</strong></article>
           <article class="metric"><small>TEA ⓘ</small><strong>{{ r.teaPercent | number:'1.2-2' }}%</strong></article>
           <article class="metric"><small>TEM ⓘ</small><strong>{{ r.temPercent | number:'1.2-2' }}%</strong></article>
-          <article class="metric"><small>COK ⓘ</small><strong>{{ r.cokTeaPercent | number:'1.2-2' }}%</strong></article>
+          <article class="metric"><small>COK anual efectivo ⓘ</small><strong>{{ r.cokTeaPercent | number:'1.2-2' }}%</strong></article>
           <article class="metric"><small>COK mensual ⓘ</small><strong>{{ r.cokTemPercent | number:'1.4-4' }}%</strong></article>
           <article class="metric"><small>TCEA ⓘ</small><strong class="green">{{ r.tceaPercent | number:'1.2-2' }}%</strong></article>
           <article class="metric"><small>VAN ⓘ</small><strong><span class="cur">{{ r.currency }}</span>{{ r.van | number:'1.2-2' }}</strong></article>
-          <article class="metric"><small>TIR ⓘ</small><strong>{{ r.tirPercent | number:'1.2-2' }}%</strong></article>
+          <article class="metric"><small>TIR mensual ⓘ</small><strong>{{ r.tirPercent | number:'1.2-2' }}%</strong></article>
           <article class="metric"><small>Cuota balón ⓘ</small><strong class="blue"><span class="cur">{{ r.currency }}</span>{{ balloonAmount() | number:'1.2-2' }}</strong></article>
           <article class="metric"><small>Interés total</small><strong><span class="cur">{{ r.currency }}</span>{{ r.totalInterest | number:'1.2-2' }}</strong></article>
           <article class="metric"><small>Costo total del crédito</small><strong><span class="cur">{{ r.currency }}</span>{{ totalCreditCost() | number:'1.2-2' }}</strong></article>
@@ -53,9 +54,10 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
                   <th>Saldo capital</th>
                   <th>Cuota</th>
                   <th>Cuota balón</th>
+                  <th>Interés</th>
                   <th>Amortización</th>
-                  <th>Seguros</th>
-                  <th>Comisión</th>
+                  <th>Desgravamen</th>
+                  <th>Seguro vehicular</th>
                   <th>Pago total ⓘ</th>
                   <th>Flujo final</th>
                   <th>Flujo base</th>
@@ -70,9 +72,10 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
                     <td>{{ r.currency }} {{ row.initialBalance | number:'1.2-2' }}</td>
                     <td>{{ r.currency }} {{ row.payment | number:'1.2-2' }}</td>
                     <td>{{ r.currency }} {{ row.balloonPayment | number:'1.2-2' }}</td>
+                    <td>{{ r.currency }} {{ row.interest | number:'1.2-2' }}</td>
                     <td>{{ r.currency }} {{ row.amortization | number:'1.2-2' }}</td>
-                    <td>{{ r.currency }} {{ row.insurance | number:'1.2-2' }}</td>
-                    <td>{{ r.currency }} {{ row.commission | number:'1.2-2' }}</td>
+                    <td>{{ r.currency }} {{ row.creditLifeInsurance | number:'1.2-2' }}</td>
+                    <td>{{ r.currency }} {{ row.vehicleInsurance | number:'1.2-2' }}</td>
                     <td class="blue">{{ r.currency }} {{ row.totalPayment | number:'1.2-2' }}</td>
                     <td>{{ r.currency }} {{ row.finalFlow | number:'1.2-2' }}</td>
                     <td>{{ r.currency }} {{ row.baseFlow | number:'1.2-2' }}</td>
@@ -80,20 +83,6 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
                   </tr>
                 }
               </tbody>
-              <tfoot>
-                <tr>
-                  <td colspan="3">Totales</td>
-                  <td>{{ r.currency }} {{ sum('payment') | number:'1.2-2' }}</td>
-                  <td>{{ r.currency }} {{ balloonAmount() | number:'1.2-2' }}</td>
-                  <td>{{ r.currency }} {{ r.financedAmount | number:'1.2-2' }}</td>
-                  <td>{{ r.currency }} {{ r.totalInsurance | number:'1.2-2' }}</td>
-                  <td>{{ r.currency }} {{ r.totalFees | number:'1.2-2' }}</td>
-                  <td>{{ r.currency }} {{ r.totalPayment | number:'1.2-2' }}</td>
-                  <td>{{ r.currency }} {{ sum('finalFlow') | number:'1.2-2' }}</td>
-                  <td>{{ r.currency }} {{ sum('baseFlow') | number:'1.2-2' }}</td>
-                  <td></td>
-                </tr>
-              </tfoot>
             </table>
           </div>
         </section>
@@ -143,7 +132,7 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
     .saved { align-self:center; padding:5px 10px; border-radius:999px; background:#eaf8ef; color:#087a3d; font-size:11px; font-weight:900; text-transform:uppercase; }
     .metrics { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:14px; margin-bottom:34px; }
     .metric { min-height:86px; padding:18px; background:#fff; border:1px solid #d9e1ee; border-radius:7px; box-shadow:0 1px 2px rgba(15,23,42,.05); overflow:hidden; }
-    .metric small { display:block; margin-bottom:10px; color:#6b7280; font-size:10px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .metric small { display:block; min-height:24px; margin-bottom:8px; color:#6b7280; font-size:10px; font-weight:900; line-height:1.2; letter-spacing:.06em; text-transform:uppercase; white-space:normal; overflow:visible; }
     .metric strong { display:block; color:#111827; font-size:19px; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .metric strong .cur { margin-right:4px; font-size:11px; font-weight:800; opacity:.6; }
     .metric.featured { background:#0036a3; color:#fff; }
@@ -239,7 +228,12 @@ export class ResultsComponent {
     return `${label} (${simulation.graceMonths}m)`;
   }
 
-  sum(field: 'payment' | 'finalFlow' | 'baseFlow') {
-    return this.result()?.schedule?.reduce((total, row) => total + row[field], 0) || 0;
+  regularFinalPayment() {
+    const schedule = this.result()?.schedule ?? [];
+    const ordinaryRows = schedule.filter(row => row.graceType === 'NONE');
+    if (!ordinaryRows.length) return 0;
+    const regular = ordinaryRows.find(row => row.balloonPayment === 0);
+    return (regular ?? ordinaryRows[0]).payment;
   }
+
 }

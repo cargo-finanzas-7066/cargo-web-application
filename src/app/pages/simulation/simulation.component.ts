@@ -265,11 +265,10 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
                 </div>
                 <div class="cost-row">
                   <label><strong>Seguro vehicular</strong><small>Cobertura integral del vehículo.</small></label>
-                  <strong>{{ product.vehicleInsuranceAnnualPercent | number:'1.2-2' }}% anual</strong>
-                </div>
-                <div class="cost-row">
-                  <label><strong>Portes / mora</strong><small>Cargo administrativo mensual.</small></label>
-                  <strong>{{ product.currency }} {{ product.monthlyFee | number:'1.2-2' }}</strong>
+                  <div class="cost-value">
+                    <strong>{{ product.vehicleInsuranceAnnualPercent | number:'1.2-2' }}% anual</strong>
+                    <small>{{ vehicleInsuranceMonthlyPercent() | number:'1.4-4' }}% mensual</small>
+                  </div>
                 </div>
               }
             </article>
@@ -376,6 +375,8 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
     .cost-row { display:flex; justify-content:space-between; align-items:center; margin:24px 26px; padding:16px; background:#f8fafc; border-radius:4px; }
     .cost-row label { display:flex; flex-direction:column; align-items:flex-start; gap:2px; margin:0; color:#111827; }
     .cost-row strong:last-child { color:#0036a3; }
+    .cost-value { display:flex; flex-direction:column; align-items:flex-end; gap:3px; color:#0036a3; }
+    .cost-value small { color:#475569; font-weight:700; }
     .legal { margin:20px 8px 0; color:#4b5563; font-style:italic; line-height:1.5; }
     .summary-card { background:#121d31; color:#fff; border-radius:7px; overflow:hidden; box-shadow:0 12px 24px rgba(15,23,42,.18); }
     .summary-card h3 { margin:0; padding:22px; background:#1b263a; font-size:17px; }
@@ -520,6 +521,11 @@ export class SimulationComponent {
 
   financedAmount() {
     return Math.max(0, this.vehiclePrice - this.downPaymentAmount());
+  }
+
+  vehicleInsuranceMonthlyPercent() {
+    const annualRate = Number(this.selectedProduct()?.vehicleInsuranceAnnualPercent) || 0;
+    return Math.round((annualRate / 12) * 10000) / 10000;
   }
 
   validateBalloon() {

@@ -7,6 +7,8 @@ export interface ScheduleRowDto {
   interest: number;
   amortization: number;
   insurance: number;
+  creditLifeInsurance: number;
+  vehicleInsurance: number;
   commission: number;
   totalPayment: number;
   finalFlow: number;
