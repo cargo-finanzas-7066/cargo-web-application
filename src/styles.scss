@@ -28,6 +28,21 @@ body {
 a { color: var(--primary); text-decoration: none; }
 input, select, textarea, button { font-family: inherit; font-size: inherit; }
 
+.field-help, .h {
+  width: 18px; height: 18px; display: inline-grid; place-items: center; position: relative;
+  margin-left: 6px; border: 1px solid #9fb3d8; border-radius: 50%; background: #eef4ff;
+  color: #0036a3; font-size: 11px; font-weight: 900; line-height: 1; cursor: help;
+  text-transform: none; letter-spacing: 0; vertical-align: middle;
+}
+.field-help::after, .h::after {
+  content: attr(data-help); width: 240px; position: absolute; z-index: 20; left: 50%;
+  bottom: calc(100% + 10px); transform: translateX(-50%); padding: 10px 12px;
+  border-radius: 4px; background: #111827; color: #fff;
+  font-size: 12px; font-weight: 700; line-height: 1.35; text-align: left;
+  text-transform: none; letter-spacing: 0; opacity: 0; pointer-events: none;
+}
+.field-help:hover::after, .field-help:focus::after, .h:hover::after { opacity: 1; }
+
 .btn {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 10px 20px; border: none; border-radius: var(--radius);

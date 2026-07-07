@@ -70,7 +70,7 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
             <div class="panel">
               <div class="search-row">
                 <input [(ngModel)]="clientQuery" placeholder="Buscar por DNI, CE o nombre..." />
-                <span>ⓘ</span>
+                <span class="field-help" tabindex="0" data-help="Busca y selecciona el cliente que quedara asociado a la simulacion.">?</span>
               </div>
               <table class="mini-table">
                 <thead><tr><th>Documento</th><th>Nombre completo</th><th>Acción</th></tr></thead>
@@ -106,7 +106,7 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
               <a routerLink="/vehicles" class="link-button">Ver catálogo de vehículos ↗</a>
             </div>
             <div class="panel">
-              <label class="label">Seleccionar vehículo</label>
+              <label class="label">Seleccionar vehículo <span class="field-help" tabindex="0" data-help="El vehiculo define el valor referencial y la moneda usados como base del credito.">?</span></label>
               <select [(ngModel)]="request.vehicleId" (ngModelChange)="onVehicleChange()">
                 <option [ngValue]="0">Buscar por marca, modelo, versión o año...</option>
                 @for (vehicle of vehicles(); track vehicle.id) {
@@ -143,7 +143,7 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
             </div>
             <div class="entity-panel">
               <div>
-                <label class="label">Producto financiero</label>
+                <label class="label">Producto financiero <span class="field-help" tabindex="0" data-help="El producto determina TEA, plazos, cuota inicial, compra inteligente y seguros permitidos.">?</span></label>
                 <select [(ngModel)]="request.financialProductId" (ngModelChange)="onProductChange()">
                   <option [ngValue]="0">Seleccione producto</option>
                   @for (product of products(); track product.id) {
@@ -179,11 +179,11 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
               <h2><span>$</span> Capital del crédito</h2>
               <div class="form-grid">
                 <label>
-                  <span>Valor del vehículo ⓘ</span>
+                  <span>Valor del vehículo <span class="field-help" tabindex="0" data-help="Precio de venta o valor referencial que se usara para calcular inicial, capital financiado y seguro vehicular.">?</span></span>
                   <input type="number" [(ngModel)]="vehiclePrice" (ngModelChange)="recalculateDownPayment()" />
                 </label>
                 <label>
-                  <span>Cuota inicial (%) ⓘ</span>
+                  <span>Cuota inicial (%) <span class="field-help" tabindex="0" data-help="Porcentaje del valor del vehiculo que paga el cliente al inicio; reduce el capital financiado.">?</span></span>
                   <input type="number" [(ngModel)]="request.downPaymentPercent" (ngModelChange)="recalculateDownPayment()" />
                 </label>
               </div>
@@ -193,10 +193,10 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
               <h2><span>▦</span> Plazo y desembolso</h2>
               <div class="form-grid">
                 <label><span>Producto financiero</span><input [value]="productLabel()" disabled /></label>
-                <label><span>TEA editable (%) ⓘ</span><input type="number" min="0" step="0.0001" [(ngModel)]="request.teaPercent" (ngModelChange)="validateTea(); validateCok()" /></label>
-                <label><span>Plazo del crédito (meses) ⓘ</span><input type="number" [(ngModel)]="request.termMonths" /></label>
-                <label><span>Fecha de primer pago ⓘ</span><input type="date" [(ngModel)]="request.firstPaymentDate" /></label>
-                <label><span>Día de pago (1-28) ⓘ</span><input type="number" min="1" max="28" [(ngModel)]="request.paymentDay" /></label>
+                <label><span>TEA editable (%) <span class="field-help" tabindex="0" data-help="Tasa efectiva anual del credito. Debe estar dentro del rango publicado por la entidad.">?</span></span><input type="number" min="0" step="0.0001" [(ngModel)]="request.teaPercent" (ngModelChange)="validateTea(); validateCok()" /></label>
+                <label><span>Plazo del crédito (meses) <span class="field-help" tabindex="0" data-help="Numero de meses del cronograma. Se valida contra el plazo permitido por el producto.">?</span></span><input type="number" [(ngModel)]="request.termMonths" /></label>
+                <label><span>Fecha de primer pago <span class="field-help" tabindex="0" data-help="Fecha desde la que se arma el primer vencimiento del cronograma.">?</span></span><input type="date" [(ngModel)]="request.firstPaymentDate" /></label>
+                <label><span>Día de pago (1-28) <span class="field-help" tabindex="0" data-help="Dia del mes en que vencen las cuotas. Se limita a 1-28 para evitar fechas invalidas.">?</span></span><input type="number" min="1" max="28" [(ngModel)]="request.paymentDay" /></label>
               </div>
               @if (teaRangeLabel()) {
                 <p class="note">La TEA permitida para {{ institutionName(selectedProduct()?.financialInstitutionId || 0) }} es {{ teaRangeLabel() }}.</p>
@@ -210,7 +210,7 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
               <h2><span>◇</span> Costo de oportunidad (COK)</h2>
               <div class="form-grid">
                 <label>
-                  <span>COK (%) ⓘ</span>
+                  <span>COK (%) <span class="field-help" tabindex="0" data-help="Costo de oportunidad anual usado para calcular VAN. Debe ser mayor o igual a la TEA.">?</span></span>
                   <input type="number" min="0" step="0.0001" [(ngModel)]="request.cokTeaPercent" (ngModelChange)="validateCok()" />
                 </label>
                 <label>
@@ -226,13 +226,13 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
 
             <article class="form-card">
               <h2><span>⌛</span> Periodo de gracia</h2>
-              <div class="grace-grid">
-                <button type="button" [class.selected]="request.graceType === 'NONE'" (click)="setGrace('NONE')"><strong>Sin gracia</strong><small>Sin diferimiento</small></button>
-                <button type="button" [class.selected]="request.graceType === 'PARTIAL'" (click)="setGrace('PARTIAL')"><strong>Gracia parcial</strong><small>Solo intereses</small></button>
-                <button type="button" [class.selected]="request.graceType === 'TOTAL'" (click)="setGrace('TOTAL')"><strong>Gracia total</strong><small>Difiere todo</small></button>
+              <div class="grace-grid" aria-label="Tipo de periodo de gracia">
+                <button type="button" [class.selected]="request.graceType === 'NONE'" (click)="setGrace('NONE')"><strong>Sin gracia <span class="field-help" tabindex="0" data-help="El cliente paga capital, intereses y cargos desde la primera cuota.">?</span></strong><small>Sin diferimiento</small></button>
+                <button type="button" [class.selected]="request.graceType === 'PARTIAL'" (click)="setGrace('PARTIAL')"><strong>Gracia parcial <span class="field-help" tabindex="0" data-help="Durante la gracia se pagan intereses, pero se difiere la amortizacion de capital.">?</span></strong><small>Solo intereses</small></button>
+                <button type="button" [class.selected]="request.graceType === 'TOTAL'" (click)="setGrace('TOTAL')"><strong>Gracia total <span class="field-help" tabindex="0" data-help="Durante la gracia no se paga cuota ordinaria; los importes se capitalizan segun reglas del producto.">?</span></strong><small>Difiere todo</small></button>
               </div>
               <label class="full">
-                <span>Duración de gracia (meses) ⓘ</span>
+                <span>Duración de gracia (meses) <span class="field-help" tabindex="0" data-help="Cantidad de meses con gracia. Se habilita al elegir gracia parcial o total.">?</span></span>
                 <input type="number" min="0" max="6" [(ngModel)]="request.graceMonths" [disabled]="request.graceType === 'NONE'" />
               </label>
             </article>
@@ -249,11 +249,11 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
               <article class="form-card">
                 <h2><span>✪</span> Compra Inteligente <small>Permite definir una cuota final mayor al cierre del crédito para reducir la cuota mensual.</small></h2>
                 <div class="balloon-row">
-                  <div><strong>¿Aplicar Compra Inteligente?</strong><p>Disponible solo si el producto financiero lo permite.</p></div>
+                  <div><strong>¿Aplicar Compra Inteligente? <span class="field-help" tabindex="0" data-help="Activa una cuota final mayor para reducir la cuota mensual durante el plazo regular.">?</span></strong><p>Disponible solo si el producto financiero lo permite.</p></div>
                   <label class="switch"><input type="checkbox" [(ngModel)]="balloonEnabled" [disabled]="!selectedProduct()?.balloonAllowed" (ngModelChange)="validateBalloon()" /><i></i></label>
                 </div>
                 <label class="full">
-                  <span>Cuota final / balón (% del valor del vehículo) ⓘ</span>
+                  <span>Cuota final / balón (% del valor del vehículo) <span class="field-help" tabindex="0" data-help="Porcentaje del valor del vehiculo que se paga como cuota residual al final del credito.">?</span></span>
                   <input type="number" [(ngModel)]="request.balloonPercent" [disabled]="!balloonEnabled" (ngModelChange)="validateBalloon()" />
                 </label>
                 <p class="note">ⓘ Nota: La cuota final no reemplaza las cuotas mensuales. Se considera como un pago residual al final del préstamo.</p>
@@ -268,17 +268,17 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
                   <div class="cost-row editable">
                     <label class="check-line">
                       <input type="checkbox" [(ngModel)]="request.creditLifeInsuranceEnabled" (ngModelChange)="validateInsurance()" />
-                      <span><strong>Seguro de desgravamen</strong><small>{{ creditLifeRangeLabel() }} mensual</small></span>
+                      <span><strong>Seguro de desgravamen <span class="field-help" tabindex="0" data-help="Seguro mensual sobre saldo deudor. El rango se toma del seed oficial de la entidad seleccionada.">?</span></strong><small>{{ creditLifeRangeLabel() }} mensual</small></span>
                     </label>
-                    <input type="number" min="0" step="0.0001" [(ngModel)]="request.creditLifeInsuranceMonthlyPercent" [disabled]="!request.creditLifeInsuranceEnabled" (ngModelChange)="validateInsurance()" />
+                    <input type="number" min="0" step="0.0001" aria-label="Tasa mensual de seguro de desgravamen" [(ngModel)]="request.creditLifeInsuranceMonthlyPercent" [disabled]="!request.creditLifeInsuranceEnabled" (ngModelChange)="validateInsurance()" />
                   </div>
                   <div class="cost-row editable">
                     <label class="check-line">
                       <input type="checkbox" [(ngModel)]="request.vehicleInsuranceEnabled" (ngModelChange)="validateInsurance()" />
-                      <span><strong>Seguro vehicular</strong><small>{{ vehicleInsuranceRangeLabel() }} anual</small></span>
+                      <span><strong>Seguro vehicular <span class="field-help" tabindex="0" data-help="Seguro anual calculado sobre el valor del vehiculo. Se convierte a mensual para el cronograma.">?</span></strong><small>{{ vehicleInsuranceRangeLabel() }} anual</small></span>
                     </label>
                     <div class="cost-value">
-                      <input type="number" min="0" step="0.0001" [(ngModel)]="request.vehicleInsuranceAnnualPercent" [disabled]="!request.vehicleInsuranceEnabled" (ngModelChange)="validateInsurance()" />
+                      <input type="number" min="0" step="0.0001" aria-label="Tasa anual de seguro vehicular" [(ngModel)]="request.vehicleInsuranceAnnualPercent" [disabled]="!request.vehicleInsuranceEnabled" (ngModelChange)="validateInsurance()" />
                       <small>{{ vehicleInsuranceMonthlyPercent() | number:'1.4-4' }}% mensual</small>
                     </div>
                   </div>
@@ -747,11 +747,11 @@ export class SimulationComponent {
     let min: number | null = null;
     let max: number | null = null;
     for (const item of rows) {
-      let fixed = Number(item[monthly ? 'ratePercentMonthly' : 'ratePercentAnnual']);
-      let itemMin = Number(item[monthly ? 'ratePercentMonthlyMin' : 'ratePercentAnnualMin']);
-      let itemMax = Number(item[monthly ? 'ratePercentMonthlyMax' : 'ratePercentAnnualMax']);
+      let fixed = this.optionalNumber(item[monthly ? 'ratePercentMonthly' : 'ratePercentAnnual']);
+      let itemMin = this.optionalNumber(item[monthly ? 'ratePercentMonthlyMin' : 'ratePercentAnnualMin']);
+      let itemMax = this.optionalNumber(item[monthly ? 'ratePercentMonthlyMax' : 'ratePercentAnnualMax']);
       if (!monthly && !Number.isFinite(fixed)) {
-        const monthlyFixed = Number(item['ratePercentMonthly']);
+        const monthlyFixed = this.optionalNumber(item['ratePercentMonthly']);
         if (Number.isFinite(monthlyFixed)) fixed = monthlyFixed * 12;
       }
       if (Number.isFinite(fixed)) {
@@ -763,8 +763,12 @@ export class SimulationComponent {
     }
     const institutionFallback = monthly ? institution?.insuranceDisbursement : institution?.insuranceVehicle;
     const productFallback = monthly ? product.creditLifeInsuranceMonthlyPercent : product.vehicleInsuranceAnnualPercent;
-    const fallback = Number(institutionFallback) || Number(productFallback) || 0;
-    return { min: min === null ? fallback : Math.min(min, fallback), max: max === null ? fallback : Math.max(max, fallback) };
+    const fallback = this.firstPositiveNumber(institutionFallback, productFallback);
+    if (min === null && max === null && fallback === null) return null;
+    return {
+      min: min === null ? (fallback ?? 0) : (fallback === null ? min : Math.min(min, fallback)),
+      max: max === null ? (fallback ?? 0) : (fallback === null ? max : Math.max(max, fallback)),
+    };
   }
 
   private defaultInsurancePercent(type: string, monthly: boolean) {
@@ -783,6 +787,20 @@ export class SimulationComponent {
     } catch {
       return [];
     }
+  }
+
+  private optionalNumber(value: unknown) {
+    if (value === null || value === undefined || value === '') return Number.NaN;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : Number.NaN;
+  }
+
+  private firstPositiveNumber(...values: unknown[]) {
+    for (const value of values) {
+      const number = this.optionalNumber(value);
+      if (Number.isFinite(number) && number > 0) return number;
+    }
+    return null;
   }
 
   private isAllowedInstitution(institutionId: number) {
