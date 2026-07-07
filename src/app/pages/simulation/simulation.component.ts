@@ -1,7 +1,7 @@
 import { DecimalPipe } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CustomerDto } from '../../customers/models/dtos/customer.dto';
 import { CustomerService } from '../../customers/services/api/customer.service';
 import { FinancialInstitutionDto } from '../../financial-institutions/models/dtos/financial-institution.dto';
@@ -21,12 +21,12 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
   template: `
     <app-page-container>
     <section class="simulation-page">
-      <div class="crumb">Simulaciones › <strong>Nueva simulación</strong></div>
+      <div class="crumb">Simulaciones › <strong>{{ isEditMode() ? 'Editar simulación' : 'Nueva simulación' }}</strong></div>
 
       @if (step() === 1) {
         <header class="step-head">
           <h1>Paso 1: Cliente, vehículo y producto</h1>
-          <p>Seleccione el solicitante, registre el vehículo de interés y elija el producto financiero para iniciar el cálculo.</p>
+          <p>{{ isEditMode() ? 'Actualice los datos principales de la simulación guardada.' : 'Seleccione el solicitante, registre el vehículo de interés y elija el producto financiero para iniciar el cálculo.' }}</p>
         </header>
       }
       @if (step() === 2) {
@@ -297,7 +297,7 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
         </section>
         <div class="actions-row">
           <button type="button" class="ghost" (click)="step.set(2)">← Atrás</button>
-          <button type="button" class="primary wide" [disabled]="calculating()" (click)="calculate()">Calcular simulación ▣</button>
+          <button type="button" class="primary wide" [disabled]="calculating()" (click)="calculate()">{{ isEditMode() ? 'Guardar cambios ▣' : 'Calcular simulación ▣' }}</button>
         </div>
         @if (submitError()) {
           <p class="error">{{ submitError() }}</p>
@@ -405,6 +405,7 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
 })
 export class SimulationComponent {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private clientSvc = inject(CustomerService);
   private vehicleSvc = inject(VehicleCatalogService);
   private institutionSvc = inject(FinancialInstitutionService);
@@ -421,6 +422,8 @@ export class SimulationComponent {
   selectedClient = signal<CustomerDto | undefined>(undefined);
   selectedVehicle = signal<VehicleDto | undefined>(undefined);
   selectedProduct = signal<FinancialProductDto | undefined>(undefined);
+  editingSimulationId = signal<number | null>(null);
+  loadedSimulationCode = signal('');
 
   clients = this.clientSvc.customers;
   vehicles = this.vehicleSvc.vehicles;
@@ -441,6 +444,26 @@ export class SimulationComponent {
     graceMonths: 0,
     balloonPercent: 0,
   };
+
+  constructor() {
+    const idParam = this.route.snapshot.paramMap.get('id');
+    const id = idParam ? Number(idParam) : null;
+    if (id && Number.isFinite(id)) {
+      this.editingSimulationId.set(id);
+      this.loadSimulationForEdit(id);
+    }
+
+    effect(() => {
+      this.clients();
+      this.vehicles();
+      this.products();
+      this.hydrateSelections();
+    }, { allowSignalWrites: true });
+  }
+
+  isEditMode() {
+    return this.editingSimulationId() !== null;
+  }
 
   filteredClients = computed(() => {
     const query = this.clientQuery.trim().toLowerCase();
@@ -480,6 +503,52 @@ export class SimulationComponent {
         this.request.balloonPercent = 0;
       }
       this.validateCok();
+    }
+  }
+
+  private loadSimulationForEdit(id: number) {
+    this.calculating.set(true);
+    this.submitError.set('');
+    this.simSvc.getByIdRemote(id).subscribe({
+      next: (simulation) => {
+        this.loadedSimulationCode.set(simulation.code);
+        this.request = {
+          clientId: simulation.clientId,
+          vehicleId: simulation.vehicleId,
+          financialProductId: simulation.financialProductId,
+          vehiclePrice: simulation.vehiclePrice,
+          downPaymentPercent: simulation.downPaymentPercent,
+          termMonths: simulation.termMonths,
+          cokTeaPercent: simulation.cokTeaPercent,
+          firstPaymentDate: simulation.firstPaymentDate,
+          paymentDay: simulation.paymentDay,
+          graceType: simulation.graceType,
+          graceMonths: simulation.graceMonths,
+          balloonPercent: simulation.balloonPercent,
+        };
+        this.vehiclePrice = simulation.vehiclePrice;
+        this.balloonEnabled = simulation.balloonPercent > 0;
+        this.hydrateSelections();
+        this.validateCok();
+        this.validateBalloon();
+        this.calculating.set(false);
+      },
+      error: (err) => {
+        this.submitError.set(err?.error?.detail ?? 'No se pudo cargar la simulación para editar.');
+        this.calculating.set(false);
+      },
+    });
+  }
+
+  private hydrateSelections() {
+    if (this.request.clientId) {
+      this.selectedClient.set(this.clientSvc.getById(Number(this.request.clientId)));
+    }
+    if (this.request.vehicleId) {
+      this.selectedVehicle.set(this.vehicleSvc.getById(Number(this.request.vehicleId)));
+    }
+    if (this.request.financialProductId) {
+      this.selectedProduct.set(this.productSvc.getById(Number(this.request.financialProductId)));
     }
   }
 
@@ -569,12 +638,15 @@ export class SimulationComponent {
     this.request.vehiclePrice = this.vehiclePrice;
     this.request.balloonPercent = this.balloonEnabled ? this.request.balloonPercent : 0;
 
-    this.simSvc.create(this.request).subscribe({
+    const editId = this.editingSimulationId();
+    const request$ = editId ? this.simSvc.update(editId, this.request) : this.simSvc.create(this.request);
+
+    request$.subscribe({
       next: (simulation) => {
         this.router.navigate(['/results', simulation.id], { state: { result: simulation } });
       },
       error: (err) => {
-        this.submitError.set(err?.error?.detail ?? 'No se pudo calcular la simulación.');
+        this.submitError.set(err?.error?.detail ?? (editId ? 'No se pudo actualizar la simulación.' : 'No se pudo calcular la simulación.'));
         this.calculating.set(false);
       },
     });

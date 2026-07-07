@@ -12,6 +12,7 @@ import { SimulationComponent } from './pages/simulation/simulation.component';
 import { ResultsComponent } from './pages/results/results.component';
 import { SimulationsListComponent } from './pages/simulations-list/simulations-list.component';
 import { ConfigComponent } from './pages/config/config.component';
+import { HelpComponent } from './pages/help/help.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -29,9 +30,11 @@ export const routes: Routes = [
       { path: 'vehicles/:id', component: VehicleFormComponent },
       { path: 'entities', component: FinancialInstitutionsComponent },
       { path: 'simulation/new', component: SimulationComponent },
+      { path: 'simulation/:id/edit', component: SimulationComponent },
       { path: 'results/:id', component: ResultsComponent },
       { path: 'simulations', component: SimulationsListComponent },
       { path: 'config', component: ConfigComponent },
+      { path: 'help', component: HelpComponent },
     ],
   },
   { path: '**', redirectTo: '' },

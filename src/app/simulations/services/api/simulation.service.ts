@@ -36,6 +36,10 @@ export class SimulationService {
     return this.http.post<SimulationDto>(`${API_URL}/simulations`, request).pipe(tap(() => this.refresh()));
   }
 
+  update(id: number, request: SimulationRequestDto) {
+    return this.http.put<SimulationDto>(`${API_URL}/simulations/${id}`, request).pipe(tap(() => this.refresh()));
+  }
+
   delete(id: number) {
     return this.http.delete<void>(`${API_URL}/simulations/${id}`).pipe(tap(() => this.refresh()));
   }

@@ -91,6 +91,7 @@ export class LayoutComponent {
     { path: '/vehicles', label: 'Vehículos', icon: '<svg viewBox="0 0 24 24"><path d="M5 17h14l-1.5-5h-11L5 17Z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>', exact: false },
     { path: '/clients', label: 'Clientes', icon: '<svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-8 0v2"/><circle cx="12" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>', exact: false },
     { path: '/entities', label: 'Entidades y costos', icon: '<svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V10h14v11"/><path d="M2 10l10-7 10 7"/></svg>', exact: false },
+    { path: '/help', label: 'Ayuda', icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.2-3 4"/><path d="M12 17h.01"/></svg>', exact: false },
     { path: '/config', label: 'Configuración', icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-4v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H3v-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1L7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V3h4v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg>', exact: false },
   ];
 
@@ -99,9 +100,11 @@ export class LayoutComponent {
     if (url.startsWith('/entities')) return 'Entidades y costos';
     if (url.startsWith('/clients')) return 'Gestión de Clientes';
     if (url.startsWith('/vehicles')) return 'Catálogo de vehículos';
+    if (url.startsWith('/simulation/') && url.endsWith('/edit')) return 'Simulaciones › Editar simulación';
     if (url.startsWith('/simulation/new')) return 'Simulaciones › Nueva simulación';
     if (url.startsWith('/results')) return 'Simulaciones › Resultado';
     if (url.startsWith('/simulations')) return 'Simulaciones guardadas';
+    if (url.startsWith('/help')) return 'Ayuda y asistencia técnica';
     return 'Dashboard / Principal';
   }
 }
