@@ -20,290 +20,305 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
   imports: [FormsModule, RouterLink, DecimalPipe, PageContainerComponent],
   template: `
     <app-page-container>
-    <section class="simulation-page">
-      <div class="crumb">Simulaciones › <strong>{{ isEditMode() ? 'Editar simulación' : 'Nueva simulación' }}</strong></div>
+      <section class="simulation-page">
+        <div class="crumb">Simulaciones › <strong>{{ isEditMode() ? 'Editar simulación' : 'Nueva simulación' }}</strong></div>
 
-      @if (step() === 1) {
-        <header class="step-head">
-          <h1>Paso 1: Cliente, vehículo y producto</h1>
-          <p>{{ isEditMode() ? 'Actualice los datos principales de la simulación guardada.' : 'Seleccione el solicitante, registre el vehículo de interés y elija el producto financiero para iniciar el cálculo.' }}</p>
-        </header>
-      }
-      @if (step() === 2) {
-        <header class="step-head">
-          <h1>Paso 2: Condiciones del crédito</h1>
-          <p>Defina la cuota inicial, plazo y periodo de gracia para calcular el cronograma.</p>
-        </header>
-      }
-      @if (step() === 3) {
-        <header class="step-head">
-          <h1>Paso 3: Compra inteligente y confirmación</h1>
-          <p>Revise las condiciones del producto antes de generar el cronograma de pagos.</p>
-        </header>
-      }
+        @if (step() === 1) {
+          <header class="step-head">
+            <h1>Paso 1: Cliente, vehículo y producto</h1>
+            <p>{{ isEditMode() ? 'Actualice los datos principales de la simulación guardada.' : 'Seleccione el solicitante, registre el vehículo de interés y elija el producto financiero para iniciar el cálculo.' }}</p>
+          </header>
+        }
+        @if (step() === 2) {
+          <header class="step-head">
+            <h1>Paso 2: Condiciones del crédito</h1>
+            <p>Defina la cuota inicial, plazo y periodo de gracia para calcular el cronograma.</p>
+          </header>
+        }
+        @if (step() === 3) {
+          <header class="step-head">
+            <h1>Paso 3: Compra inteligente y confirmación</h1>
+            <p>Revise las condiciones del producto antes de generar el cronograma de pagos.</p>
+          </header>
+        }
 
-      <div class="stepper">
-        <div class="step-item" [class.active]="step() === 1" [class.done]="step() > 1">
-          <span>{{ step() > 1 ? '✓' : '01' }}</span>
-          <strong>Cliente, vehículo<br />y producto</strong>
-        </div>
-        <div class="line" [class.done]="step() > 1"></div>
-        <div class="step-item" [class.active]="step() === 2" [class.done]="step() > 2">
-          <span>{{ step() > 2 ? '✓' : '02' }}</span>
-          <strong>Condiciones<br />del crédito</strong>
-        </div>
-        <div class="line" [class.done]="step() > 2"></div>
-        <div class="step-item" [class.active]="step() === 3">
-          <span>03</span>
-          <strong>Compra inteligente<br />y confirmación</strong>
-        </div>
-      </div>
-
-      @if (step() === 1) {
-        <section class="step-body">
-          <div class="section-title">
-            <h2>
-              <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-8 0v2"/><circle cx="12" cy="7" r="4"/></svg>
-              Información del Cliente
-            </h2>
+        <div class="stepper">
+          <div class="step-item" [class.active]="step() === 1" [class.done]="step() > 1">
+            <span>{{ step() > 1 ? '✓' : '01' }}</span>
+            <strong>Cliente, vehículo<br />y producto</strong>
           </div>
-          <div class="panel">
-            <div class="search-row">
-              <input [(ngModel)]="clientQuery" placeholder="Buscar por DNI, CE o nombre..." />
-              <span>ⓘ</span>
+          <div class="line" [class.done]="step() > 1"></div>
+          <div class="step-item" [class.active]="step() === 2" [class.done]="step() > 2">
+            <span>{{ step() > 2 ? '✓' : '02' }}</span>
+            <strong>Condiciones<br />del crédito</strong>
+          </div>
+          <div class="line" [class.done]="step() > 2"></div>
+          <div class="step-item" [class.active]="step() === 3">
+            <span>03</span>
+            <strong>Compra inteligente<br />y confirmación</strong>
+          </div>
+        </div>
+
+        @if (step() === 1) {
+          <section class="step-body">
+            <div class="section-title">
+              <h2>
+                <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-8 0v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Información del Cliente
+              </h2>
             </div>
-            <table class="mini-table">
-              <thead><tr><th>Documento</th><th>Nombre completo</th><th>Acción</th></tr></thead>
-              <tbody>
-                @for (client of filteredClients(); track client.id ?? client.docNumber) {
-                  <tr>
-                    <td>{{ client.docNumber }}</td>
-                    <td>{{ client.names }} {{ client.surnames }}</td>
-                    <td><button type="button" (click)="selectClient(client)">Seleccionar</button></td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-            @if (selectedClient(); as client) {
-              <div class="selected-card">
-                <div class="person-icon">
-                  <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-8 0v2"/><circle cx="16" cy="7" r="4"/></svg>
-                </div>
-                <div>
-                  <h3>{{ client.names }} {{ client.surnames }}</h3>
-                  <p>DNI {{ client.docNumber }} &nbsp; {{ client.email }} &nbsp; {{ client.phone }}</p>
-                </div>
-                <div class="card-note">ⓘ Los datos del cliente se usarán para guardar y consultar la simulación.</div>
+            <div class="panel">
+              <div class="search-row">
+                <input [(ngModel)]="clientQuery" placeholder="Buscar por DNI, CE o nombre..." />
+                <span>ⓘ</span>
               </div>
-            }
-          </div>
-
-          <div class="section-title spaced">
-            <h2>
-              <svg viewBox="0 0 24 24"><path d="M5 17h14l-1.5-5h-11L5 17Z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
-              Vehículo referencial
-            </h2>
-            <a routerLink="/vehicles" class="link-button">Ver catálogo de vehículos ↗</a>
-          </div>
-          <div class="panel">
-            <label class="label">Seleccionar vehículo</label>
-            <select [(ngModel)]="request.vehicleId" (ngModelChange)="onVehicleChange()">
-              <option [ngValue]="0">Buscar por marca, modelo, versión o año...</option>
-              @for (vehicle of vehicles(); track vehicle.id) {
-                <option [ngValue]="vehicle.id">{{ vehicle.brand }} {{ vehicle.model }} {{ vehicle.year }}</option>
-              }
-            </select>
-            @if (selectedVehicle(); as vehicle) {
-              <div class="vehicle-picked">
-                <div class="image-placeholder">
-                  @if (vehicle.imageUrl) {
-                    <img [src]="vehicle.imageUrl" alt="" />
-                  } @else {
-                    <svg viewBox="0 0 24 24"><path d="M3 17h18l-2-6H5l-2 6Z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+              <table class="mini-table">
+                <thead><tr><th>Documento</th><th>Nombre completo</th><th>Acción</th></tr></thead>
+                <tbody>
+                  @for (client of filteredClients(); track client.id ?? client.docNumber) {
+                    <tr>
+                      <td>{{ client.docNumber }}</td>
+                      <td>{{ client.names }} {{ client.surnames }}</td>
+                      <td><button type="button" (click)="selectClient(client)">Seleccionar</button></td>
+                    </tr>
                   }
+                </tbody>
+              </table>
+              @if (selectedClient(); as client) {
+                <div class="selected-card">
+                  <div class="person-icon">
+                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-8 0v2"/><circle cx="16" cy="7" r="4"/></svg>
+                  </div>
+                  <div>
+                    <h3>{{ client.names }} {{ client.surnames }}</h3>
+                    <p>DNI {{ client.docNumber }} &nbsp; {{ client.email }} &nbsp; {{ client.phone }}</p>
+                  </div>
+                  <div class="card-note">ⓘ Los datos del cliente se usarán para guardar y consultar la simulación.</div>
                 </div>
-                <div>
-                  <h3>{{ vehicle.brand }} {{ vehicle.model }} {{ vehicle.year }}</h3>
-                  <small>Concesionario</small>
-                  <strong>{{ vehicle.dealer }}</strong>
-                </div>
-                <div class="amount">
-                  <small>Valor referencial</small>
-                  <strong>{{ vehicle.currency }} {{ vehicle.price | number:'1.2-2' }}</strong>
-                </div>
-              </div>
-            }
-          </div>
+              }
+            </div>
 
-          <div class="section-title spaced">
-            <h2>
-              <svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V10h14v11"/><path d="M2 10l10-7 10 7"/></svg>
-              Producto financiero
-            </h2>
-          </div>
-          <div class="entity-panel">
-            <div>
-              <label class="label">Producto financiero</label>
-              <select [(ngModel)]="request.financialProductId" (ngModelChange)="onProductChange()">
-                <option [ngValue]="0">Seleccione producto</option>
-                @for (product of products(); track product.id) {
-                  <option [ngValue]="product.id">{{ institutionName(product.financialInstitutionId) }} — {{ product.productName }}</option>
+            <div class="section-title spaced">
+              <h2>
+                <svg viewBox="0 0 24 24"><path d="M5 17h14l-1.5-5h-11L5 17Z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+                Vehículo referencial
+              </h2>
+              <a routerLink="/vehicles" class="link-button">Ver catálogo de vehículos ↗</a>
+            </div>
+            <div class="panel">
+              <label class="label">Seleccionar vehículo</label>
+              <select [(ngModel)]="request.vehicleId" (ngModelChange)="onVehicleChange()">
+                <option [ngValue]="0">Buscar por marca, modelo, versión o año...</option>
+                @for (vehicle of vehicles(); track vehicle.id) {
+                  <option [ngValue]="vehicle.id">{{ vehicle.brand }} {{ vehicle.model }} {{ vehicle.year }}</option>
                 }
               </select>
-              <div class="warning">△ Las condiciones se toman del producto financiero vigente y pueden variar según evaluación crediticia.</div>
-            </div>
-            @if (selectedProduct(); as product) {
-              <aside class="conditions">
-                <h4>Condiciones del producto (lectura)</h4>
-                <dl>
-                  <dt>TEA:</dt><dd>{{ product.teaPercent | number:'1.2-2' }}%</dd>
-                  <dt>Inicial mínima:</dt><dd>{{ product.minDownPaymentPercent | number:'1.0-0' }}%</dd>
-                  <dt>Financiamiento máx:</dt><dd>{{ product.maxDownPaymentPercent | number:'1.0-0' }}%</dd>
-                  <dt>Plazo permitido:</dt><dd>{{ product.minTermMonths }} - {{ product.maxTermMonths }} meses</dd>
-                  <dt>Compra inteligente:</dt><dd>{{ product.balloonAllowed ? ('Hasta ' + product.maxBalloonPercent + '%') : 'No permitida' }}</dd>
-                </dl>
-              </aside>
-            }
-          </div>
-        </section>
-
-        <div class="actions-row">
-          <button type="button" class="ghost" routerLink="/simulations">Cancelar</button>
-          <button type="button" class="primary wide" (click)="goStep2()">Siguiente paso: Condiciones del crédito →</button>
-        </div>
-      }
-
-      @if (step() === 2) {
-        <section class="credit-stack">
-          <article class="form-card">
-            <h2><span>$</span> Capital del crédito</h2>
-            <div class="form-grid">
-              <label>
-                <span>Valor del vehículo ⓘ</span>
-                <input type="number" [(ngModel)]="vehiclePrice" (ngModelChange)="recalculateDownPayment()" />
-              </label>
-              <label>
-                <span>Cuota inicial (%) ⓘ</span>
-                <input type="number" [(ngModel)]="request.downPaymentPercent" (ngModelChange)="recalculateDownPayment()" />
-              </label>
-            </div>
-          </article>
-
-          <article class="form-card">
-            <h2><span>▦</span> Plazo y desembolso</h2>
-            <div class="form-grid">
-              <label><span>Producto financiero</span><input [value]="productLabel()" disabled /></label>
-              <label><span>TEA del producto (%)</span><input [value]="(selectedProduct()?.teaPercent | number:'1.2-2') || '-'" disabled /></label>
-              <label><span>Plazo del crédito (meses) ⓘ</span><input type="number" [(ngModel)]="request.termMonths" /></label>
-              <label><span>Fecha de primer pago ⓘ</span><input type="date" [(ngModel)]="request.firstPaymentDate" /></label>
-              <label><span>Día de pago (1-28) ⓘ</span><input type="number" min="1" max="28" [(ngModel)]="request.paymentDay" /></label>
-            </div>
-          </article>
-
-          <article class="form-card cok-card">
-            <h2><span>◇</span> Costo de oportunidad (COK)</h2>
-            <div class="form-grid">
-              <label>
-                <span>COK (%) ⓘ</span>
-                <input type="number" min="0" step="0.0001" [(ngModel)]="request.cokTeaPercent" (ngModelChange)="validateCok()" />
-              </label>
-              <label>
-                <span>COK mensual (%)</span>
-                <input [value]="cokMonthlyPercent() | number:'1.4-4'" disabled />
-              </label>
-            </div>
-            <p class="note">El COK debe ser mayor o igual a la TEA del producto. Para el VAN se usa (1 + COK)^(1/12) - 1.</p>
-            @if (cokError()) {
-              <p class="error">{{ cokError() }}</p>
-            }
-          </article>
-
-          <article class="form-card">
-            <h2><span>⌛</span> Periodo de gracia</h2>
-            <div class="grace-grid">
-              <button type="button" [class.selected]="request.graceType === 'NONE'" (click)="setGrace('NONE')"><strong>Sin gracia</strong><small>Sin diferimiento</small></button>
-              <button type="button" [class.selected]="request.graceType === 'PARTIAL'" (click)="setGrace('PARTIAL')"><strong>Gracia parcial</strong><small>Solo intereses</small></button>
-              <button type="button" [class.selected]="request.graceType === 'TOTAL'" (click)="setGrace('TOTAL')"><strong>Gracia total</strong><small>Difiere todo</small></button>
-            </div>
-            <label class="full">
-              <span>Duración de gracia (meses) ⓘ</span>
-              <input type="number" min="0" max="6" [(ngModel)]="request.graceMonths" [disabled]="request.graceType === 'NONE'" />
-            </label>
-          </article>
-        </section>
-        <div class="actions-row">
-          <button type="button" class="ghost" (click)="step.set(1)">← Atrás</button>
-          <button type="button" class="primary wide" (click)="goStep3()">Siguiente paso: Compra inteligente →</button>
-        </div>
-      }
-
-      @if (step() === 3) {
-        <section class="confirm-layout">
-          <div>
-            <article class="form-card">
-              <h2><span>✪</span> Compra Inteligente <small>Permite definir una cuota final mayor al cierre del crédito para reducir la cuota mensual.</small></h2>
-              <div class="balloon-row">
-                <div><strong>¿Aplicar Compra Inteligente?</strong><p>Disponible solo si el producto financiero lo permite.</p></div>
-                <label class="switch"><input type="checkbox" [(ngModel)]="balloonEnabled" [disabled]="!selectedProduct()?.balloonAllowed" (ngModelChange)="validateBalloon()" /><i></i></label>
-              </div>
-              <label class="full">
-                <span>Cuota final / balón (% del valor del vehículo) ⓘ</span>
-                <input type="number" [(ngModel)]="request.balloonPercent" [disabled]="!balloonEnabled" (ngModelChange)="validateBalloon()" />
-              </label>
-              <p class="note">ⓘ Nota: La cuota final no reemplaza las cuotas mensuales. Se considera como un pago residual al final del préstamo.</p>
-              @if (balloonError()) {
-                <p class="error">{{ balloonError() }}</p>
-              }
-            </article>
-
-            <article class="form-card">
-              <h2><span>◈</span> Seguros y cargos referenciales del producto</h2>
-              @if (selectedProduct(); as product) {
-                <div class="cost-row">
-                  <label><strong>Seguro de desgravamen</strong><small>Protección obligatoria sobre deuda.</small></label>
-                  <strong>{{ product.creditLifeInsuranceMonthlyPercent | number:'1.3-3' }}% mensual</strong>
-                </div>
-                <div class="cost-row">
-                  <label><strong>Seguro vehicular</strong><small>Cobertura integral del vehículo.</small></label>
-                  <div class="cost-value">
-                    <strong>{{ product.vehicleInsuranceAnnualPercent | number:'1.2-2' }}% anual</strong>
-                    <small>{{ vehicleInsuranceMonthlyPercent() | number:'1.4-4' }}% mensual</small>
+              @if (selectedVehicle(); as vehicle) {
+                <div class="vehicle-picked">
+                  <div class="image-placeholder">
+                    @if (vehicle.imageUrl) {
+                      <img [src]="vehicle.imageUrl" alt="" />
+                    } @else {
+                      <svg viewBox="0 0 24 24"><path d="M3 17h18l-2-6H5l-2 6Z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+                    }
+                  </div>
+                  <div>
+                    <h3>{{ vehicle.brand }} {{ vehicle.model }} {{ vehicle.year }}</h3>
+                    <small>Concesionario</small>
+                    <strong>{{ vehicle.dealer }}</strong>
+                  </div>
+                  <div class="amount">
+                    <small>Valor referencial</small>
+                    <strong>{{ vehicle.currency }} {{ vehicle.price | number:'1.2-2' }}</strong>
                   </div>
                 </div>
               }
-            </article>
-            <p class="legal">Los seguros y cargos mostrados corresponden a las condiciones vigentes del producto financiero seleccionado.</p>
-          </div>
-
-          <aside class="summary-card">
-            <h3>▣ Resumen final</h3>
-            <dl class="summary-main">
-              <dt>Cliente</dt><dd>{{ selectedClientName() }}</dd>
-              <dt>Vehículo</dt><dd>{{ selectedVehicleName() }}</dd>
-              <dt>Producto financiero</dt><dd>{{ productLabel() }}</dd>
-            </dl>
-            <dl class="summary-money">
-              <dt>Valor del vehículo</dt><dd>{{ vehiclePrice | number:'1.2-2' }}</dd>
-              <dt>Cuota inicial</dt><dd>{{ downPaymentAmount() | number:'1.2-2' }} ({{ request.downPaymentPercent | number:'1.0-0' }}%)</dd>
-              <dt>Capital financiado (estimado)</dt><dd>{{ financedAmount() | number:'1.2-2' }}</dd>
-            </dl>
-            <div class="summary-columns">
-              <div><small>Tasas</small><strong>TEA: {{ (selectedProduct()?.teaPercent | number:'1.2-2') || '-' }}%</strong></div>
-              <div><small>COK</small><strong>COK: {{ request.cokTeaPercent | number:'1.2-2' }}%</strong><strong>Mensual: {{ cokMonthlyPercent() | number:'1.4-4' }}%</strong></div>
-              <div><small>Plazo y gracia</small><strong>Plazo: {{ request.termMonths }} meses</strong><strong>Gracia: {{ request.graceMonths }}m</strong></div>
-              <div><small>Compra inteligente</small><strong>Balón: {{ balloonEnabled ? (request.balloonPercent + '%') : 'No aplica' }}</strong></div>
             </div>
-          </aside>
-        </section>
-        <div class="actions-row">
-          <button type="button" class="ghost" (click)="step.set(2)">← Atrás</button>
-          <button type="button" class="primary wide" [disabled]="calculating()" (click)="calculate()">{{ isEditMode() ? 'Guardar cambios ▣' : 'Calcular simulación ▣' }}</button>
-        </div>
-        @if (submitError()) {
-          <p class="error">{{ submitError() }}</p>
+
+            <div class="section-title spaced">
+              <h2>
+                <svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V10h14v11"/><path d="M2 10l10-7 10 7"/></svg>
+                Producto financiero
+              </h2>
+            </div>
+            <div class="entity-panel">
+              <div>
+                <label class="label">Producto financiero</label>
+                <select [(ngModel)]="request.financialProductId" (ngModelChange)="onProductChange()">
+                  <option [ngValue]="0">Seleccione producto</option>
+                  @for (product of products(); track product.id) {
+                    <option [ngValue]="product.id">{{ institutionName(product.financialInstitutionId) }} — {{ product.productName }}</option>
+                  }
+                </select>
+                <div class="warning">△ Las condiciones se toman del producto financiero vigente y pueden variar según evaluación crediticia.</div>
+              </div>
+              @if (selectedProduct(); as product) {
+                <aside class="conditions">
+                  <h4>Condiciones del producto (lectura)</h4>
+                  <dl>
+                    <dt>TEA:</dt><dd>{{ product.teaPercent | number:'1.2-2' }}%</dd>
+                    <dt>Inicial mínima:</dt><dd>{{ product.minDownPaymentPercent | number:'1.0-0' }}%</dd>
+                    <dt>Financiamiento máx:</dt><dd>{{ product.maxDownPaymentPercent | number:'1.0-0' }}%</dd>
+                    <dt>Plazo permitido:</dt><dd>{{ product.minTermMonths }} - {{ product.maxTermMonths }} meses</dd>
+                    <dt>Compra inteligente:</dt><dd>{{ product.balloonAllowed ? ('Hasta ' + product.maxBalloonPercent + '%') : 'No permitida' }}</dd>
+                  </dl>
+                </aside>
+              }
+            </div>
+          </section>
+
+          <div class="actions-row">
+            <button type="button" class="ghost" routerLink="/simulations">Cancelar</button>
+            <button type="button" class="primary wide" (click)="goStep2()">Siguiente paso: Condiciones del crédito →</button>
+          </div>
         }
-      }
-    </section>
+
+        @if (step() === 2) {
+          <section class="credit-stack">
+            <article class="form-card">
+              <h2><span>$</span> Capital del crédito</h2>
+              <div class="form-grid">
+                <label>
+                  <span>Valor del vehículo ⓘ</span>
+                  <input type="number" [(ngModel)]="vehiclePrice" (ngModelChange)="recalculateDownPayment()" />
+                </label>
+                <label>
+                  <span>Cuota inicial (%) ⓘ</span>
+                  <input type="number" [(ngModel)]="request.downPaymentPercent" (ngModelChange)="recalculateDownPayment()" />
+                </label>
+              </div>
+            </article>
+
+            <article class="form-card">
+              <h2><span>▦</span> Plazo y desembolso</h2>
+              <div class="form-grid">
+                <label><span>Producto financiero</span><input [value]="productLabel()" disabled /></label>
+                <label><span>TEA editable (%) ⓘ</span><input type="number" min="0" step="0.0001" [(ngModel)]="request.teaPercent" (ngModelChange)="validateTea(); validateCok()" /></label>
+                <label><span>Plazo del crédito (meses) ⓘ</span><input type="number" [(ngModel)]="request.termMonths" /></label>
+                <label><span>Fecha de primer pago ⓘ</span><input type="date" [(ngModel)]="request.firstPaymentDate" /></label>
+                <label><span>Día de pago (1-28) ⓘ</span><input type="number" min="1" max="28" [(ngModel)]="request.paymentDay" /></label>
+              </div>
+              @if (teaRangeLabel()) {
+                <p class="note">La TEA permitida para {{ institutionName(selectedProduct()?.financialInstitutionId || 0) }} es {{ teaRangeLabel() }}.</p>
+              }
+              @if (teaError()) {
+                <p class="error">{{ teaError() }}</p>
+              }
+            </article>
+
+            <article class="form-card cok-card">
+              <h2><span>◇</span> Costo de oportunidad (COK)</h2>
+              <div class="form-grid">
+                <label>
+                  <span>COK (%) ⓘ</span>
+                  <input type="number" min="0" step="0.0001" [(ngModel)]="request.cokTeaPercent" (ngModelChange)="validateCok()" />
+                </label>
+                <label>
+                  <span>COK mensual (%)</span>
+                  <input [value]="cokMonthlyPercent() | number:'1.4-4'" disabled />
+                </label>
+              </div>
+              <p class="note">El COK debe ser mayor o igual a la TEA elegida. Para el VAN se usa (1 + COK)^(1/12) - 1.</p>
+              @if (cokError()) {
+                <p class="error">{{ cokError() }}</p>
+              }
+            </article>
+
+            <article class="form-card">
+              <h2><span>⌛</span> Periodo de gracia</h2>
+              <div class="grace-grid">
+                <button type="button" [class.selected]="request.graceType === 'NONE'" (click)="setGrace('NONE')"><strong>Sin gracia</strong><small>Sin diferimiento</small></button>
+                <button type="button" [class.selected]="request.graceType === 'PARTIAL'" (click)="setGrace('PARTIAL')"><strong>Gracia parcial</strong><small>Solo intereses</small></button>
+                <button type="button" [class.selected]="request.graceType === 'TOTAL'" (click)="setGrace('TOTAL')"><strong>Gracia total</strong><small>Difiere todo</small></button>
+              </div>
+              <label class="full">
+                <span>Duración de gracia (meses) ⓘ</span>
+                <input type="number" min="0" max="6" [(ngModel)]="request.graceMonths" [disabled]="request.graceType === 'NONE'" />
+              </label>
+            </article>
+          </section>
+          <div class="actions-row">
+            <button type="button" class="ghost" (click)="step.set(1)">← Atrás</button>
+            <button type="button" class="primary wide" (click)="goStep3()">Siguiente paso: Compra inteligente →</button>
+          </div>
+        }
+
+        @if (step() === 3) {
+          <section class="confirm-layout">
+            <div>
+              <article class="form-card">
+                <h2><span>✪</span> Compra Inteligente <small>Permite definir una cuota final mayor al cierre del crédito para reducir la cuota mensual.</small></h2>
+                <div class="balloon-row">
+                  <div><strong>¿Aplicar Compra Inteligente?</strong><p>Disponible solo si el producto financiero lo permite.</p></div>
+                  <label class="switch"><input type="checkbox" [(ngModel)]="balloonEnabled" [disabled]="!selectedProduct()?.balloonAllowed" (ngModelChange)="validateBalloon()" /><i></i></label>
+                </div>
+                <label class="full">
+                  <span>Cuota final / balón (% del valor del vehículo) ⓘ</span>
+                  <input type="number" [(ngModel)]="request.balloonPercent" [disabled]="!balloonEnabled" (ngModelChange)="validateBalloon()" />
+                </label>
+                <p class="note">ⓘ Nota: La cuota final no reemplaza las cuotas mensuales. Se considera como un pago residual al final del préstamo.</p>
+                @if (balloonError()) {
+                  <p class="error">{{ balloonError() }}</p>
+                }
+              </article>
+
+              <article class="form-card">
+                <h2><span>◈</span> Seguros del producto <small>Puede elegir solo uno o editar las tasas permitidas.</small></h2>
+                @if (selectedProduct()) {
+                  <div class="cost-row editable">
+                    <label class="check-line">
+                      <input type="checkbox" [(ngModel)]="request.creditLifeInsuranceEnabled" (ngModelChange)="validateInsurance()" />
+                      <span><strong>Seguro de desgravamen</strong><small>{{ creditLifeRangeLabel() }} mensual</small></span>
+                    </label>
+                    <input type="number" min="0" step="0.0001" [(ngModel)]="request.creditLifeInsuranceMonthlyPercent" [disabled]="!request.creditLifeInsuranceEnabled" (ngModelChange)="validateInsurance()" />
+                  </div>
+                  <div class="cost-row editable">
+                    <label class="check-line">
+                      <input type="checkbox" [(ngModel)]="request.vehicleInsuranceEnabled" (ngModelChange)="validateInsurance()" />
+                      <span><strong>Seguro vehicular</strong><small>{{ vehicleInsuranceRangeLabel() }} anual</small></span>
+                    </label>
+                    <div class="cost-value">
+                      <input type="number" min="0" step="0.0001" [(ngModel)]="request.vehicleInsuranceAnnualPercent" [disabled]="!request.vehicleInsuranceEnabled" (ngModelChange)="validateInsurance()" />
+                      <small>{{ vehicleInsuranceMonthlyPercent() | number:'1.4-4' }}% mensual</small>
+                    </div>
+                  </div>
+                }
+                @if (insuranceError()) {
+                  <p class="error">{{ insuranceError() }}</p>
+                }
+              </article>
+              <p class="legal">Los seguros seleccionados se usan en el cronograma; los cargos informativos del banco no se cargan como comisión automática.</p>
+            </div>
+
+            <aside class="summary-card">
+              <h3>▣ Resumen final</h3>
+              <dl class="summary-main">
+                <dt>Cliente</dt><dd>{{ selectedClientName() }}</dd>
+                <dt>Vehículo</dt><dd>{{ selectedVehicleName() }}</dd>
+                <dt>Producto financiero</dt><dd>{{ productLabel() }}</dd>
+              </dl>
+              <dl class="summary-money">
+                <dt>Valor del vehículo</dt><dd>{{ vehiclePrice | number:'1.2-2' }}</dd>
+                <dt>Cuota inicial</dt><dd>{{ downPaymentAmount() | number:'1.2-2' }} ({{ request.downPaymentPercent | number:'1.0-0' }}%)</dd>
+                <dt>Capital financiado (estimado)</dt><dd>{{ financedAmount() | number:'1.2-2' }}</dd>
+              </dl>
+              <div class="summary-columns">
+                <div><small>Tasas</small><strong>TEA: {{ request.teaPercent | number:'1.2-2' }}%</strong></div>
+                <div><small>COK</small><strong>COK: {{ request.cokTeaPercent | number:'1.2-2' }}%</strong><strong>Mensual: {{ cokMonthlyPercent() | number:'1.4-4' }}%</strong></div>
+                <div><small>Plazo y gracia</small><strong>Plazo: {{ request.termMonths }} meses</strong><strong>Gracia: {{ request.graceMonths }}m</strong></div>
+                <div><small>Compra inteligente</small><strong>Balón: {{ balloonEnabled ? (request.balloonPercent + '%') : 'No aplica' }}</strong></div>
+              </div>
+            </aside>
+          </section>
+          <div class="actions-row">
+            <button type="button" class="ghost" (click)="step.set(2)">← Atrás</button>
+            <button type="button" class="primary wide" [disabled]="calculating()" (click)="calculate()">{{ isEditMode() ? 'Guardar cambios ▣' : 'Calcular simulación ▣' }}</button>
+          </div>
+          @if (submitError()) {
+            <p class="error">{{ submitError() }}</p>
+          }
+        }
+      </section>
     </app-page-container>
   `,
   styles: [`
@@ -375,6 +390,10 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
     .cost-row { display:flex; justify-content:space-between; align-items:center; margin:24px 26px; padding:16px; background:#f8fafc; border-radius:4px; }
     .cost-row label { display:flex; flex-direction:column; align-items:flex-start; gap:2px; margin:0; color:#111827; }
     .cost-row strong:last-child { color:#0036a3; }
+    .cost-row.editable { gap:18px; }
+    .cost-row.editable > input, .cost-value input { max-width:180px; }
+    .check-line { flex:1; flex-direction:row !important; align-items:center !important; gap:12px !important; }
+    .check-line input { width:18px; min-height:18px; padding:0; flex:0 0 auto; }
     .cost-value { display:flex; flex-direction:column; align-items:flex-end; gap:3px; color:#0036a3; }
     .cost-value small { color:#475569; font-weight:700; }
     .legal { margin:20px 8px 0; color:#4b5563; font-style:italic; line-height:1.5; }
@@ -416,7 +435,9 @@ export class SimulationComponent {
   clientQuery = '';
   balloonEnabled = false;
   balloonError = signal('');
+  teaError = signal('');
   cokError = signal('');
+  insuranceError = signal('');
   submitError = signal('');
   calculating = signal(false);
   selectedClient = signal<CustomerDto | undefined>(undefined);
@@ -427,7 +448,7 @@ export class SimulationComponent {
 
   clients = this.clientSvc.customers;
   vehicles = this.vehicleSvc.vehicles;
-  products = this.productSvc.products;
+  products = computed(() => this.productSvc.products().filter((product) => this.isAllowedInstitution(product.financialInstitutionId)));
 
   vehiclePrice = 0;
 
@@ -435,6 +456,7 @@ export class SimulationComponent {
     clientId: 0,
     vehicleId: 0,
     financialProductId: 0,
+    teaPercent: 0,
     downPaymentPercent: 20,
     termMonths: 36,
     cokTeaPercent: 0,
@@ -443,6 +465,10 @@ export class SimulationComponent {
     graceType: 'NONE',
     graceMonths: 0,
     balloonPercent: 0,
+    creditLifeInsuranceEnabled: true,
+    creditLifeInsuranceMonthlyPercent: 0,
+    vehicleInsuranceEnabled: true,
+    vehicleInsuranceAnnualPercent: 0,
   };
 
   constructor() {
@@ -495,14 +521,21 @@ export class SimulationComponent {
     if (product) {
       this.request.termMonths = Math.min(Math.max(this.request.termMonths, product.minTermMonths), product.maxTermMonths);
       this.request.downPaymentPercent = Math.min(Math.max(this.request.downPaymentPercent, product.minDownPaymentPercent), product.maxDownPaymentPercent);
-      if (!this.request.cokTeaPercent || this.request.cokTeaPercent < product.teaPercent) {
-        this.request.cokTeaPercent = product.teaPercent;
+      this.request.teaPercent = product.teaPercent;
+      if (!this.request.cokTeaPercent || this.request.cokTeaPercent < this.request.teaPercent) {
+        this.request.cokTeaPercent = this.request.teaPercent;
       }
+      this.request.creditLifeInsuranceEnabled = this.request.creditLifeInsuranceEnabled ?? true;
+      this.request.vehicleInsuranceEnabled = this.request.vehicleInsuranceEnabled ?? true;
+      this.request.creditLifeInsuranceMonthlyPercent = this.defaultInsurancePercent('DEGRAVAMEN', true);
+      this.request.vehicleInsuranceAnnualPercent = this.defaultInsurancePercent('VEHICULAR', false);
       if (!product.balloonAllowed) {
         this.balloonEnabled = false;
         this.request.balloonPercent = 0;
       }
+      this.validateTea();
       this.validateCok();
+      this.validateInsurance();
     }
   }
 
@@ -517,6 +550,7 @@ export class SimulationComponent {
           vehicleId: simulation.vehicleId,
           financialProductId: simulation.financialProductId,
           vehiclePrice: simulation.vehiclePrice,
+          teaPercent: simulation.teaPercent,
           downPaymentPercent: simulation.downPaymentPercent,
           termMonths: simulation.termMonths,
           cokTeaPercent: simulation.cokTeaPercent,
@@ -525,12 +559,18 @@ export class SimulationComponent {
           graceType: simulation.graceType,
           graceMonths: simulation.graceMonths,
           balloonPercent: simulation.balloonPercent,
+          creditLifeInsuranceEnabled: simulation.creditLifeInsuranceEnabled,
+          creditLifeInsuranceMonthlyPercent: simulation.creditLifeInsuranceMonthlyPercent,
+          vehicleInsuranceEnabled: simulation.vehicleInsuranceEnabled,
+          vehicleInsuranceAnnualPercent: simulation.vehicleInsuranceAnnualPercent,
         };
         this.vehiclePrice = simulation.vehiclePrice;
         this.balloonEnabled = simulation.balloonPercent > 0;
         this.hydrateSelections();
+        this.validateTea();
         this.validateCok();
         this.validateBalloon();
+        this.validateInsurance();
         this.calculating.set(false);
       },
       error: (err) => {
@@ -571,7 +611,7 @@ export class SimulationComponent {
   }
 
   goStep3() {
-    if (!this.validateCok()) return;
+    if (!this.validateTea() || !this.validateCok() || !this.validateInsurance()) return;
     this.step.set(3);
   }
 
@@ -593,7 +633,7 @@ export class SimulationComponent {
   }
 
   vehicleInsuranceMonthlyPercent() {
-    const annualRate = Number(this.selectedProduct()?.vehicleInsuranceAnnualPercent) || 0;
+    const annualRate = Number(this.request.vehicleInsuranceAnnualPercent) || 0;
     return Math.round((annualRate / 12) * 10000) / 10000;
   }
 
@@ -607,9 +647,27 @@ export class SimulationComponent {
     return true;
   }
 
+  validateTea() {
+    const range = this.teaRange();
+    if (!range) {
+      this.teaError.set('');
+      return true;
+    }
+    const value = Number(this.request.teaPercent);
+    if (!Number.isFinite(value)) {
+      this.teaError.set('Ingresa la TEA como porcentaje.');
+      return false;
+    }
+    if (value < range.min || value > range.max) {
+      this.teaError.set(`La TEA debe estar entre ${range.min.toFixed(2)}% y ${range.max.toFixed(2)}%.`);
+      return false;
+    }
+    this.teaError.set('');
+    return true;
+  }
+
   validateCok() {
-    const product = this.selectedProduct();
-    if (!product) {
+    if (!this.selectedProduct()) {
       this.cokError.set('');
       return true;
     }
@@ -618,11 +676,33 @@ export class SimulationComponent {
       this.cokError.set('Ingresa el COK como porcentaje.');
       return false;
     }
-    if (value < product.teaPercent) {
-      this.cokError.set(`El COK no puede ser menor a la TEA del producto (${product.teaPercent.toFixed(2)}%).`);
+    const tea = Number(this.request.teaPercent) || 0;
+    if (value < tea) {
+      this.cokError.set(`El COK no puede ser menor a la TEA elegida (${tea.toFixed(2)}%).`);
       return false;
     }
     this.cokError.set('');
+    return true;
+  }
+
+  validateInsurance() {
+    const lifeRange = this.insuranceRange('DEGRAVAMEN', true);
+    if (this.request.creditLifeInsuranceEnabled && lifeRange) {
+      const value = Number(this.request.creditLifeInsuranceMonthlyPercent);
+      if (!Number.isFinite(value) || value < lifeRange.min || value > lifeRange.max) {
+        this.insuranceError.set(`El seguro de desgravamen debe estar entre ${lifeRange.min.toFixed(4)}% y ${lifeRange.max.toFixed(4)}% mensual.`);
+        return false;
+      }
+    }
+    const vehicleRange = this.insuranceRange('VEHICULAR', false);
+    if (this.request.vehicleInsuranceEnabled && vehicleRange) {
+      const value = Number(this.request.vehicleInsuranceAnnualPercent);
+      if (!Number.isFinite(value) || value < vehicleRange.min || value > vehicleRange.max) {
+        this.insuranceError.set(`El seguro vehicular debe estar entre ${vehicleRange.min.toFixed(4)}% y ${vehicleRange.max.toFixed(4)}% anual.`);
+        return false;
+      }
+    }
+    this.insuranceError.set('');
     return true;
   }
 
@@ -631,8 +711,87 @@ export class SimulationComponent {
     return Math.round((Math.pow(1 + cok, 1 / 12) - 1) * 1000000) / 10000;
   }
 
+  teaRangeLabel() {
+    const range = this.teaRange();
+    return range ? `${range.min.toFixed(2)}% - ${range.max.toFixed(2)}%` : '';
+  }
+
+  private teaRange() {
+    const product = this.selectedProduct();
+    if (!product) return null;
+    const institution = this.institutionSvc.getById(product.financialInstitutionId);
+    const values = (institution?.teaPublishedLabel || '')
+      .replace(',', '.')
+      .match(/\d+(?:\.\d+)?/g)
+      ?.map((value) => Number(value)) ?? [];
+    if (values.length >= 2) return { min: values[0], max: values[1] };
+    if (values.length === 1) return { min: 0, max: values[0] };
+    return { min: product.teaPercent, max: product.teaPercent };
+  }
+
+  creditLifeRangeLabel() {
+    const range = this.insuranceRange('DEGRAVAMEN', true);
+    return range ? `${range.min.toFixed(4)}% - ${range.max.toFixed(4)}%` : 'Rango no publicado';
+  }
+
+  vehicleInsuranceRangeLabel() {
+    const range = this.insuranceRange('VEHICULAR', false);
+    return range ? `${range.min.toFixed(4)}% - ${range.max.toFixed(4)}%` : 'Rango no publicado';
+  }
+
+  private insuranceRange(type: string, monthly: boolean) {
+    const product = this.selectedProduct();
+    if (!product) return null;
+    const institution = this.institutionSvc.getById(product.financialInstitutionId);
+    const rows = this.parseJson(institution?.insurancesJson || '[]').filter((item) => String(item['type'] || '').includes(type));
+    let min: number | null = null;
+    let max: number | null = null;
+    for (const item of rows) {
+      let fixed = Number(item[monthly ? 'ratePercentMonthly' : 'ratePercentAnnual']);
+      let itemMin = Number(item[monthly ? 'ratePercentMonthlyMin' : 'ratePercentAnnualMin']);
+      let itemMax = Number(item[monthly ? 'ratePercentMonthlyMax' : 'ratePercentAnnualMax']);
+      if (!monthly && !Number.isFinite(fixed)) {
+        const monthlyFixed = Number(item['ratePercentMonthly']);
+        if (Number.isFinite(monthlyFixed)) fixed = monthlyFixed * 12;
+      }
+      if (Number.isFinite(fixed)) {
+        itemMin = fixed;
+        itemMax = fixed;
+      }
+      if (Number.isFinite(itemMin)) min = min === null ? itemMin : Math.min(min, itemMin);
+      if (Number.isFinite(itemMax)) max = max === null ? itemMax : Math.max(max, itemMax);
+    }
+    const institutionFallback = monthly ? institution?.insuranceDisbursement : institution?.insuranceVehicle;
+    const productFallback = monthly ? product.creditLifeInsuranceMonthlyPercent : product.vehicleInsuranceAnnualPercent;
+    const fallback = Number(institutionFallback) || Number(productFallback) || 0;
+    return { min: min === null ? fallback : Math.min(min, fallback), max: max === null ? fallback : Math.max(max, fallback) };
+  }
+
+  private defaultInsurancePercent(type: string, monthly: boolean) {
+    const product = this.selectedProduct();
+    const range = this.insuranceRange(type, monthly);
+    const productValue = monthly ? product?.creditLifeInsuranceMonthlyPercent : product?.vehicleInsuranceAnnualPercent;
+    const value = Number(productValue);
+    if (Number.isFinite(value) && value > 0) return value;
+    return range?.min ?? 0;
+  }
+
+  private parseJson(value: string) {
+    try {
+      const parsed = JSON.parse(value || '[]');
+      return Array.isArray(parsed) ? parsed as Record<string, unknown>[] : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private isAllowedInstitution(institutionId: number) {
+    const code = this.institutionSvc.getById(institutionId)?.code;
+    return ['BCP', 'BBVA', 'INTERBANK'].includes(code || '');
+  }
+
   calculate() {
-    if (this.calculating() || !this.validateBalloon() || !this.validateCok()) return;
+    if (this.calculating() || !this.validateBalloon() || !this.validateTea() || !this.validateCok() || !this.validateInsurance()) return;
     this.submitError.set('');
     this.calculating.set(true);
     this.request.vehiclePrice = this.vehiclePrice;

@@ -36,7 +36,6 @@ import { VehicleCatalogService } from '../../vehicles/services/api/vehicle-catal
           <article class="metric"><small>TIR mensual ⓘ</small><strong>{{ r.tirPercent | number:'1.2-2' }}%</strong></article>
           <article class="metric"><small>Cuota balón ⓘ</small><strong class="blue"><span class="cur">{{ r.currency }}</span>{{ balloonAmount() | number:'1.2-2' }}</strong></article>
           <article class="metric"><small>Interés total</small><strong><span class="cur">{{ r.currency }}</span>{{ r.totalInterest | number:'1.2-2' }}</strong></article>
-          <article class="metric"><small>Costo total del crédito</small><strong><span class="cur">{{ r.currency }}</span>{{ totalCreditCost() | number:'1.2-2' }}</strong></article>
           <article class="metric total"><small>Total a pagar</small><strong><span class="cur">{{ r.currency }}</span>{{ r.totalPayment | number:'1.2-2' }}</strong></article>
         </section>
 
@@ -213,12 +212,6 @@ export class ResultsComponent {
   balloonAmount() {
     const schedule = this.result()?.schedule ?? [];
     return schedule.reduce((total, row) => total + row.balloonPayment, 0);
-  }
-
-  totalCreditCost() {
-    const r = this.result();
-    if (!r) return 0;
-    return r.totalInterest + r.totalInsurance + r.totalFees;
   }
 
   graceLabel() {

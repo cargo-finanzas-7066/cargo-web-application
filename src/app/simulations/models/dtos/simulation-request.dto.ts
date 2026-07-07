@@ -5,6 +5,7 @@ export interface SimulationRequestDto {
   vehicleId: number;
   financialProductId: number;
   vehiclePrice?: number;
+  teaPercent?: number;
   downPaymentPercent: number;
   termMonths: number;
   cokTeaPercent: number;
@@ -13,4 +14,8 @@ export interface SimulationRequestDto {
   graceType: GraceType;
   graceMonths: number;
   balloonPercent: number;
+  creditLifeInsuranceEnabled: boolean;
+  creditLifeInsuranceMonthlyPercent?: number;
+  vehicleInsuranceEnabled: boolean;
+  vehicleInsuranceAnnualPercent?: number;
 }

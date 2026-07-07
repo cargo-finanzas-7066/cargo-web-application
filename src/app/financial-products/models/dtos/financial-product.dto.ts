@@ -1,6 +1,8 @@
 export interface FinancialProductDto {
   id: number;
   financialInstitutionId: number;
+  institutionCode?: string;
+  institutionName?: string;
   productName: string;
   currency: string;
   teaPercent: number;

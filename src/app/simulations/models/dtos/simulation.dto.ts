@@ -18,6 +18,10 @@ export interface SimulationDto extends Omit<SimulationResultDto, 'schedule'> {
   graceType: GraceType;
   graceMonths: number;
   balloonPercent: number;
+  creditLifeInsuranceEnabled: boolean;
+  creditLifeInsuranceMonthlyPercent: number;
+  vehicleInsuranceEnabled: boolean;
+  vehicleInsuranceAnnualPercent: number;
   createdAt: string;
   productSnapshot: Record<string, unknown>;
   schedule: ScheduleRowDto[] | null;

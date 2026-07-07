@@ -13,152 +13,152 @@ type JsonItem = Record<string, any>;
   imports: [FormsModule, RouterLink, PageContainerComponent],
   template: `
     <app-page-container>
-    <section class="institutions-page">
-      <div class="page-header">
-        <div><h1>Entidades financieras y costos <small class="mode-badge">Modo lectura</small></h1></div>
-      </div>
-
-      <div class="notice">
-        <span class="notice-icon">i</span>
-        <p>Las condiciones mostradas han sido recopiladas de fuentes públicas de entidades financieras. Las condiciones finales pueden variar según evaluación crediticia, campañas vigentes y políticas internas de cada entidad.</p>
-      </div>
-
-      <section class="filters">
-        <label class="search-field">
-          <span>Buscar entidad</span>
-          <div>
-            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-            <input [(ngModel)]="query" placeholder="Buscar banco o entidad...">
-          </div>
-        </label>
-        <label>
-          <span>Plazo máximo</span>
-          <select [(ngModel)]="termFilter">
-            <option value="">Cualquiera</option>
-            <option value="36">Hasta 36 meses</option>
-            <option value="60">Hasta 60 meses</option>
-            <option value="72">Hasta 72 meses</option>
-          </select>
-        </label>
-      </section>
-
-      <section class="matrix-card">
-        <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Entidad</th>
-              <th>TEA<br>publicada <small>ⓘ</small></th>
-              <th>Inicial<br>mín. <small>ⓘ</small></th>
-              <th>Financ.<br>máx. <small>ⓘ</small></th>
-              <th>Plazo</th>
-              <th>Gracia <small>ⓘ</small></th>
-              <th>Seguros <small>ⓘ</small></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (institution of pagedInstitutions(); track institution.id) {
-              <tr (click)="openDetail(institution)" tabindex="0" (keyup.enter)="openDetail(institution)">
-                <td class="entity-cell">
-                  <span class="bank-logo" [class]="logoClass(institution)">{{ clean(institution.logoText) }}</span>
-                  <strong>{{ clean(institution.shortName) }}</strong>
-                </td>
-                <td><strong class="blue">{{ clean(displayTea(institution)) }}</strong></td>
-                <td>{{ clean(displayInitial(institution)) }}</td>
-                <td>{{ clean(displayFinancing(institution)) }}</td>
-                <td>{{ clean(displayTerm(institution)) }}</td>
-                <td>{{ clean(displayGrace(institution)) }}</td>
-                <td>{{ clean(displayInsurance(institution)) }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+      <section class="institutions-page">
+        <div class="page-header">
+          <div><h1>Entidades financieras y costos <small class="mode-badge">Modo lectura</small></h1></div>
         </div>
-        <footer class="table-footer">
-          <span>Mostrando 1 a {{ pagedInstitutions().length }} de 24 entidades</span>
-          <div class="pagination">
-            <button type="button">‹</button>
-            <button type="button" class="active">1</button>
-            <button type="button">2</button>
-            <button type="button">3</button>
-            <span>...</span>
-            <button type="button">›</button>
-          </div>
-        </footer>
-      </section>
 
-      @if (selected()) {
-        <div class="drawer-layer">
-          <div class="drawer-scrim" (click)="closeDetail()"></div>
-          <aside class="detail-drawer">
-            <header>
-              <span class="drawer-logo">{{ clean(selected()!.logoText) }}</span>
-              <div>
-                <h2>{{ clean(selected()!.name) }}</h2>
-                <p>Condiciones publicadas para crédito vehicular</p>
-              </div>
-              <button class="close-button" type="button" (click)="closeDetail()" aria-label="Cerrar detalle">×</button>
-            </header>
+        <div class="notice">
+          <span class="notice-icon">i</span>
+          <p>Las condiciones mostradas han sido recopiladas de fuentes públicas de entidades financieras. Las condiciones finales pueden variar según evaluación crediticia, campañas vigentes y políticas internas de cada entidad.</p>
+        </div>
 
-            <div class="drawer-content">
-              <section class="detail-section">
-                <h3>Resumen general</h3>
-                <div class="summary-grid">
-                  <div><span>Entidad</span><strong>{{ clean(selected()!.shortName) }}</strong></div>
-                  <div><span>Tipo</span><strong>{{ clean(selected()!.type) }}</strong></div>
-                  <div><span>Moneda</span><strong>Soles (PEN)</strong></div>
-                  <div><span>Crédito</span><strong>Vehicular</strong></div>
-                </div>
-              </section>
-
-              <section class="detail-section">
-                <h3>Condiciones base</h3>
-                <div class="condition-grid">
-                  <article><span>Inicial mín.</span><strong>{{ clean(percentOrLabel(selected()!.minDownPayment, selected()!.minimumInitialLabel)) }}</strong><small>ⓘ</small></article>
-                  <article><span>Financ. máx.</span><strong>{{ clean(percentOrLabel(selected()!.maxFinancing, selected()!.maximumFinancingLabel)) }}</strong><small>ⓘ</small></article>
-                  <article><span>Plazo</span><strong>{{ clean(displayTerm(selected()!)) }}</strong><small>ⓘ</small></article>
-                  <article><span>Gracia</span><strong>{{ clean(displayGrace(selected()!)) }}</strong><small>ⓘ</small></article>
-                </div>
-              </section>
-
-              <section class="detail-section">
-                <h3>TEA por rango de capital</h3>
-                <div class="rates-table">
-                  <div class="rates-head"><span>Rango de capital</span><span>TEA</span></div>
-                  @for (rate of rateRows(selected()!); track rate.label) {
-                    <div><span>{{ rate.label }}</span><strong>{{ clean(rate.value) }}</strong></div>
-                  }
-                </div>
-              </section>
-
-              <section class="detail-section">
-                <h3>Seguros y cargos referenciales</h3>
-                @for (item of insuranceAndChargeRows(selected()!); track item.label) {
-                  <div class="charge-row">
-                    <span>{{ clean(item.label) }} <small>ⓘ</small></span>
-                    <strong>{{ clean(item.value) }}</strong>
-                  </div>
-                }
-              </section>
-
-              <section class="source-card">
-                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
-                <div>
-                  <p><strong>Fuente:</strong> {{ clean(selected()!.sourceName) }}</p>
-                  <p><strong>Fecha:</strong> {{ selected()!.sourceDate }}</p>
-                  <p><strong>Vigencia:</strong> Según publicación vigente</p>
-                </div>
-              </section>
+        <section class="filters">
+          <label class="search-field">
+            <span>Buscar entidad</span>
+            <div>
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input [(ngModel)]="query" placeholder="Buscar banco o entidad...">
             </div>
+          </label>
+          <label>
+            <span>Plazo máximo</span>
+            <select [(ngModel)]="termFilter">
+              <option value="">Cualquiera</option>
+              <option value="36">Hasta 36 meses</option>
+              <option value="60">Hasta 60 meses</option>
+              <option value="72">Hasta 72 meses</option>
+            </select>
+          </label>
+        </section>
 
-            <footer>
-              <button type="button" class="secondary-action" (click)="closeDetail()">Cerrar</button>
-              <a class="primary-action" [routerLink]="['/simulation/new']" [queryParams]="{ entityId: selected()!.id }">Usar en simulación</a>
-            </footer>
-          </aside>
-        </div>
-      }
-    </section>
+        <section class="matrix-card">
+          <div class="table-scroll">
+            <table>
+              <thead>
+              <tr>
+                <th>Entidad</th>
+                <th>TEA<br>publicada <small>ⓘ</small></th>
+                <th>Inicial<br>mín. <small>ⓘ</small></th>
+                <th>Financ.<br>máx. <small>ⓘ</small></th>
+                <th>Plazo</th>
+                <th>Gracia <small>ⓘ</small></th>
+                <th>Seguros <small>ⓘ</small></th>
+              </tr>
+              </thead>
+              <tbody>
+                @for (institution of pagedInstitutions(); track institution.id) {
+                  <tr (click)="openDetail(institution)" tabindex="0" (keyup.enter)="openDetail(institution)">
+                    <td class="entity-cell">
+                      <span class="bank-logo" [class]="logoClass(institution)">{{ clean(institution.logoText) }}</span>
+                      <strong>{{ clean(institution.shortName) }}</strong>
+                    </td>
+                    <td><strong class="blue">{{ clean(displayTea(institution)) }}</strong></td>
+                    <td>{{ clean(displayInitial(institution)) }}</td>
+                    <td>{{ clean(displayFinancing(institution)) }}</td>
+                    <td>{{ clean(displayTerm(institution)) }}</td>
+                    <td>{{ clean(displayGrace(institution)) }}</td>
+                    <td>{{ clean(displayInsurance(institution)) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <footer class="table-footer">
+            <span>Mostrando 1 a {{ pagedInstitutions().length }} de {{ filteredInstitutions().length }} entidades</span>
+            <div class="pagination">
+              <button type="button">‹</button>
+              <button type="button" class="active">1</button>
+              <button type="button">2</button>
+              <button type="button">3</button>
+              <span>...</span>
+              <button type="button">›</button>
+            </div>
+          </footer>
+        </section>
+
+        @if (selected()) {
+          <div class="drawer-layer">
+            <div class="drawer-scrim" (click)="closeDetail()"></div>
+            <aside class="detail-drawer">
+              <header>
+                <span class="drawer-logo">{{ clean(selected()!.logoText) }}</span>
+                <div>
+                  <h2>{{ clean(selected()!.name) }}</h2>
+                  <p>Condiciones publicadas para crédito vehicular</p>
+                </div>
+                <button class="close-button" type="button" (click)="closeDetail()" aria-label="Cerrar detalle">×</button>
+              </header>
+
+              <div class="drawer-content">
+                <section class="detail-section">
+                  <h3>Resumen general</h3>
+                  <div class="summary-grid">
+                    <div><span>Entidad</span><strong>{{ clean(selected()!.shortName) }}</strong></div>
+                    <div><span>Tipo</span><strong>{{ clean(selected()!.type) }}</strong></div>
+                    <div><span>Moneda</span><strong>Soles (PEN)</strong></div>
+                    <div><span>Crédito</span><strong>Vehicular</strong></div>
+                  </div>
+                </section>
+
+                <section class="detail-section">
+                  <h3>Condiciones base</h3>
+                  <div class="condition-grid">
+                    <article><span>Inicial mín.</span><strong>{{ clean(percentOrLabel(selected()!.minDownPayment, selected()!.minimumInitialLabel)) }}</strong><small>ⓘ</small></article>
+                    <article><span>Financ. máx.</span><strong>{{ clean(percentOrLabel(selected()!.maxFinancing, selected()!.maximumFinancingLabel)) }}</strong><small>ⓘ</small></article>
+                    <article><span>Plazo</span><strong>{{ clean(displayTerm(selected()!)) }}</strong><small>ⓘ</small></article>
+                    <article><span>Gracia</span><strong>{{ clean(displayGrace(selected()!)) }}</strong><small>ⓘ</small></article>
+                  </div>
+                </section>
+
+                <section class="detail-section">
+                  <h3>TEA por rango de capital</h3>
+                  <div class="rates-table">
+                    <div class="rates-head"><span>Rango de capital</span><span>TEA</span></div>
+                    @for (rate of rateRows(selected()!); track rate.label) {
+                      <div><span>{{ rate.label }}</span><strong>{{ clean(rate.value) }}</strong></div>
+                    }
+                  </div>
+                </section>
+
+                <section class="detail-section">
+                  <h3>Seguros y cargos referenciales</h3>
+                  @for (item of insuranceAndChargeRows(selected()!); track item.label) {
+                    <div class="charge-row">
+                      <span>{{ clean(item.label) }} <small>ⓘ</small></span>
+                      <strong>{{ clean(item.value) }}</strong>
+                    </div>
+                  }
+                </section>
+
+                <section class="source-card">
+                  <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+                  <div>
+                    <p><strong>Fuente:</strong> {{ clean(selected()!.sourceName) }}</p>
+                    <p><strong>Fecha:</strong> {{ selected()!.sourceDate }}</p>
+                    <p><strong>Vigencia:</strong> Según publicación vigente</p>
+                  </div>
+                </section>
+              </div>
+
+              <footer>
+                <button type="button" class="secondary-action" (click)="closeDetail()">Cerrar</button>
+                <a class="primary-action" [routerLink]="['/simulation/new']" [queryParams]="{ entityId: selected()!.id }">Usar en simulación</a>
+              </footer>
+            </aside>
+          </div>
+        }
+      </section>
     </app-page-container>
   `,
   styles: [`
@@ -234,9 +234,10 @@ export class FinancialInstitutionsComponent {
   filteredInstitutions = computed(() => {
     const query = this.query.trim().toLowerCase();
     return this.service.institutions().filter((institution) => {
+      const allowed = ['BCP', 'BBVA', 'INTERBANK'].includes(institution.code);
       const text = `${this.clean(institution.name)} ${this.clean(institution.shortName)}`.toLowerCase();
       const maxTerm = institution.maxTerm ?? 999;
-      return (!query || text.includes(query)) && (!this.termFilter || maxTerm <= Number(this.termFilter));
+      return allowed && (!query || text.includes(query)) && (!this.termFilter || maxTerm <= Number(this.termFilter));
     });
   });
 
